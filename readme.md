@@ -10,6 +10,12 @@ To do:
 * [x] MAC description
 * [x] MAC test
 * [ ] MAC synthesis (timing report)
+* [x] Pipelined tree adder description
+* [x] Pipelined tree adder test
+* [ ] Pipelined tree adder synthesis
+* [ ] 2D Dot product description
+* [ ] 2D Dot product test
+* [ ] 2D Dot product synthesis (timing report)
 * [ ] Convolution 3x3 description
 * [ ] Convolution 3x3 test
 * [ ] Convolution 3x3 synthesis (timing report)
