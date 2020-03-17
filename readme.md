@@ -7,8 +7,8 @@ Implementing a CNN in a Lattice ICE40HX4K.
 
 To do:
 
-* [ ] MAC description
-* [ ] MAC test
+* [x] MAC description
+* [x] MAC test
 * [ ] MAC synthesis (timing report)
 * [ ] Convolution 3x3 description
 * [ ] Convolution 3x3 test
