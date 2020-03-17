@@ -1,5 +1,6 @@
 from nmigen_cocotb import run
 from cnn.mac import MAC
+from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp
 import pytest
 import random
 from math import ceil
@@ -50,36 +51,20 @@ class MacTest():
         while True:
             yield RisingEdge(self.dut.clk)
             if self.current_clken:
-                self.buff_in.append((signed_from_2c(self.current_a, self.input_w), signed_from_2c(self.current_b, self.input_w)))
+                self.buff_in.append((int_from_twos_comp(self.current_a, self.input_w), int_from_twos_comp(self.current_b, self.input_w)))
 
     @cocotb.coroutine
     def output_monitor(self):
         while True:
             yield RisingEdge(self.dut.clk)
             if self.current_valid_o:
-                self.buff_out.append(signed_from_2c(self.current_output, self.output_w))
+                self.buff_out.append(int_from_twos_comp(self.current_output, self.output_w))
 
     def check_data(self):
         last = 0
         for (a, b), o in zip(self.buff_in, self.buff_out):
             assert o == last + a * b, f'{o} == {last} + {a} * {b}'
             last += a * b
-
-
-
-def twos_comp(val, bits):
-    """compute the 2's complement of int value val"""
-    if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
-        val = val - (1 << bits)        # compute negative value
-    return val                         # return positive value as is
-
-
-def signed_from_2c(binary, bits): 
-    val = binary & ~(2**(bits - 1)) 
-    if binary & 2**(bits - 1): 
-        val -= 2**(bits - 1) 
-    return val 
-
 
 
 def generate_pair(bits):
@@ -117,8 +102,8 @@ def check_data(dut):
     
     dut.clken <= 1
     for a, b in [(random.randint(*limits), random.randint(*limits)) for _ in range(100)]:
-        dut.input_a <= twos_comp(a, width_in)
-        dut.input_b <= twos_comp(b, width_in)
+        dut.input_a <= twos_comp_from_int(a, width_in)
+        dut.input_b <= twos_comp_from_int(b, width_in)
         yield RisingEdge(dut.clk)
 
     yield RisingEdge(dut.clk)
@@ -133,6 +118,6 @@ tf_test_data.generate_tests()
 @pytest.mark.parametrize("input_w, output_w", [(8, 24),])
 def test_mac(input_w, output_w):
     core = MAC(input_w=input_w,
-                          output_w=output_w)
+               output_w=output_w)
     ports = [core.input_a, core.input_b, core.clken, core.clr, core.output, core.valid_o]
     run(core, 'cnn.tests.test_mac', ports=ports, vcd_file=f'./test_mac_i{input_w}_o{output_w}.vcd')
