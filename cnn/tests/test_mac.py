@@ -119,5 +119,5 @@ tf_test_data.generate_tests()
 def test_mac(input_w, output_w):
     core = MAC(input_w=input_w,
                output_w=output_w)
-    ports = [core.input_a, core.input_b, core.clken, core.clr, core.output, core.valid_o]
+    ports = core.get_ports()
     run(core, 'cnn.tests.test_mac', ports=ports, vcd_file=f'./test_mac_i{input_w}_o{output_w}.vcd')

@@ -11,6 +11,9 @@ class MAC(Elaboratable):
         self.output = Signal(self.output_w)
         self.valid_o = Signal()
 
+    def get_ports(self):
+        return [self.input_a, self.input_b, self.clken, self.clr, self.output, self.valid_o]
+
     def elaborate(self, platform):
         m = Module()
         sync = m.d.sync
