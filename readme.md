@@ -13,9 +13,9 @@ To do:
 * [x] Pipelined tree adder description
 * [x] Pipelined tree adder test
 * [ ] Pipelined tree adder synthesis
-* [ ] 2D Dot product description
-* [ ] 2D Dot product test
-* [ ] 2D Dot product synthesis (timing report)
+* [x] Dot product description
+* [x] Dot product test
+* [ ] Dot product synthesis (timing report)
 * [ ] Dot product array block description
 * [ ] Dot product array block test
 * [ ] Dot product array block synthesis (timing report)
