@@ -1,12 +1,14 @@
 from nmigen import *
 from cnn.mac import MAC
+from cnn.utils import required_bits
 from cores_nmigen.interfaces import AxiStream
 
 class DotProduct(Elaboratable):
-    def __init__(self, input_w, output_w, n_inputs):
+    def __init__(self, input_w, n_inputs, output_w=None, allow_overflow=False):
         self.input_w = input_w
-        self.output_w = output_w
         self.n_inputs = n_inputs
+        self.output_w = self._calculate_output_width() if output_w is None else output_w
+        self._check_output_w(allow_overflow)
         self.input = AxiStream(width=self.input_w*self.n_inputs, direction='sink', name='input')
         self.coeff = [Signal(self.input_w, name='coeff_'+str(i)) for i in range(self.n_inputs)]
         self.output = AxiStream(self.output_w, direction='source', name='output')
@@ -17,6 +19,19 @@ class DotProduct(Elaboratable):
         ports += [self.input[f] for f in self.input.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
+
+    def _calculate_output_width(self):
+        worst_value = -2**(self.input_w - 1)
+        worst_mult = worst_value ** 2
+        worst_result = worst_mult * self.n_inputs
+        return required_bits(worst_result)
+
+    def _check_output_w(self, allow_overflow):
+        min_outut_w = self._calculate_output_width()
+        if self.output_w < min_outut_w:
+            print(f'WARNING: output_w is {self.output_w}. Minimum output_w to guarantee no overflow is {min_outut_w}')
+        if not allow_overflow:
+            assert self.output_w >= min_outut_w, f'{self.output_w} < {min_outut_w}'
 
     def elaborate(self, platform):
         m = Module()

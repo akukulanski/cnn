@@ -101,7 +101,7 @@ class DotProductTest():
 
 @cocotb.coroutine
 def check_data(dut):
-    test_size = 100
+    test_size = 20
 
     test = DotProductTest(dut)
     yield test.init_test()
@@ -136,10 +136,10 @@ tf_test_data = TF(check_data)
 # tf_test_data.add_option('multiple', [True, False])
 tf_test_data.generate_tests()
 
-@pytest.mark.parametrize("input_w, output_w, n_inputs", [(8, 16, 4)])
-def test_dot_product(input_w, output_w, n_inputs):
+@pytest.mark.repeat(10)
+@pytest.mark.parametrize("input_w, n_inputs", [(8, 4)])
+def test_dot_product(input_w, n_inputs):
     core = DotProduct(input_w=input_w,
-                      output_w=output_w,
                       n_inputs=n_inputs)
     ports = core.get_ports()
-    run(core, 'cnn.tests.test_dot_product', ports=ports, vcd_file=f'./test_dot_product_i{input_w}_o{output_w}_n{n_inputs}.vcd')
+    run(core, 'cnn.tests.test_dot_product', ports=ports, vcd_file=f'./test_dot_product_i{input_w}_o{core.output_w}_n{n_inputs}.vcd')
