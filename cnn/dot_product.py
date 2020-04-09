@@ -10,7 +10,7 @@ class DotProduct(Elaboratable):
         self.output_w = self._calculate_output_width() if output_w is None else output_w
         self._check_output_w(allow_overflow)
         self.input = AxiStream(width=self.input_w*self.n_inputs, direction='sink', name='input')
-        self.coeff = [Signal(self.input_w, name='coeff_'+str(i)) for i in range(self.n_inputs)]
+        self.coeff = [Signal(self.input_w, name='coeff_'+str(i)) for i in range(self.n_inputs)] # To do: unify both input interfaces.
         self.output = AxiStream(self.output_w, direction='source', name='output')
 
     def get_ports(self):
