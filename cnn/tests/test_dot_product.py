@@ -100,7 +100,7 @@ class DotProductTest():
 
 
 @cocotb.coroutine
-def check_data(dut):
+def check_data(dut, dummy):
     test_size = 20
 
     test = DotProductTest(dut)
@@ -133,10 +133,9 @@ def check_data(dut):
 
 
 tf_test_data = TF(check_data)
-# tf_test_data.add_option('multiple', [True, False])
+tf_test_data.add_option('dummy', [0] * 10) # repeat 10 times
 tf_test_data.generate_tests()
 
-@pytest.mark.repeat(10)
 @pytest.mark.parametrize("input_w, n_inputs", [(8, 4)])
 def test_dot_product(input_w, n_inputs):
     core = DotProduct(input_w=input_w,
