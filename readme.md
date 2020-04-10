@@ -16,16 +16,10 @@ To do:
 * [x] Dot product array (*farm*) block description
 * [x] Dot product array (*farm*) block test
 * [x] Row Fifo block description
-* [ ] Row Fifo block test: PARTIALLY DONE...
-    - [x] basic test
-    - [ ] test burps
-    - [ ] split files
-    - [ ] calculate expected buffer lengths and assert
+* [x] Row Fifo block test
 * [ ] MatrixFeeder block description: STARTED, UNTESTED.
+    - [ ] split files
 * [ ] MatrixFeeder block test
-    - [ ] basic test
-    - [ ] test burps
-    - [ ] endianness test
 * [ ] Convolution integration block description
 * [ ] Convolution integration block test
 * [ ] UART interface
