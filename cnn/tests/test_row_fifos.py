@@ -1,5 +1,5 @@
 from nmigen_cocotb import run
-from cnn.matrix_feeder import RowFifos # from cnn.row_fifos import RowFifos
+from cnn.row_fifos import RowFifos
 from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp, slice_signal
 from cores_nmigen.test.interfaces import AxiStreamDriver
 from cores_nmigen.test.utils import pack, unpack

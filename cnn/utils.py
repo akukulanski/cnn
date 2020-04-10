@@ -1,5 +1,5 @@
 from math import ceil, log2
-
+from nmigen import *
 
 def required_bits(value):
     if value > 0: 
@@ -16,3 +16,11 @@ def _required_output_bits(stage):
         worst_value *= 2
         if s == stage:
             return required_bits(worst_value)
+
+
+def _and(signals):
+    return Mux(Cat(*signals) == 2**len(signals)-1, 1, 0)
+
+
+def _or(signals):
+    return Mux(Cat(*signals) != 0, 1, 0)
