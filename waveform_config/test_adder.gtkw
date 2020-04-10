@@ -1,0 +1,57 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Sun Mar 22 19:45:02 2020
+[*]
+[dumpfile] "./test_adder_i8_s4.vcd"
+[dumpfile_mtime] "Sun Mar 22 19:39:35 2020"
+[dumpfile_size] 153727
+[savefile] "./adder.gtkw"
+[timestart] 0
+[size] 1920 1016
+[pos] -1 -1
+*-17.128111 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[sst_width] 211
+[signals_width] 190
+[sst_expanded] 1
+[sst_vpaned_height] 291
+@28
+top.clk
+top.clken
+@200
+-INPUT
+@28
+top.valid_i
+top.tree_adder_0_valid_i
+top.tree_adder_0_valid_o
+top.tree_adder_1_valid_i
+top.tree_adder_1_valid_o
+top.tree_adder_2_valid_i
+top.tree_adder_2_valid_o
+top.tree_adder_3_valid_i
+top.tree_adder_3_valid_o
+@420
+top.input_0[7:0]
+top.input_1[7:0]
+top.input_2[7:0]
+top.input_3[7:0]
+top.input_4[7:0]
+top.input_5[7:0]
+top.input_6[7:0]
+top.input_7[7:0]
+top.input_8[7:0]
+top.input_9[7:0]
+top.input_10[7:0]
+top.input_11[7:0]
+top.input_12[7:0]
+top.input_13[7:0]
+top.input_14[7:0]
+top.input_15[7:0]
+@200
+-OUTPUT
+@28
+top.valid_o
+@421
+top.output[11:0]
+[pattern_trace] 1
+[pattern_trace] 0
