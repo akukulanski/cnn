@@ -1,0 +1,57 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Fri Apr 10 00:30:22 2020
+[*]
+[dumpfile] "./test_farm_i8_n4_c3.vcd"
+[dumpfile_mtime] "Fri Apr 10 00:29:03 2020"
+[dumpfile_size] 63484
+[savefile] "./waveform_config/test_farm.gtkw"
+[timestart] 0
+[size] 1920 1016
+[pos] -1 -1
+*-16.143795 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[sst_width] 211
+[signals_width] 222
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+top.clk
+@200
+-INPUT
+@24
+top.current_core_sink[1:0]
+@200
+-VALID_I
+@28
+top.core_0_input__TVALID
+top.core_1_input__TVALID
+top.core_2_input__TVALID
+top.input__TVALID
+@200
+-READY_I
+@28
+top.core_0_input__TREADY
+top.core_1_input__TREADY
+top.core_2_input__TREADY
+top.input__TREADY
+@200
+-OUTPUT
+@25
+top.current_core_source[1:0]
+@200
+-VALID_O
+@28
+top.core_0_output__TVALID
+top.core_1_output__TVALID
+top.core_2_output__TVALID
+top.output__TVALID
+@200
+-READY_O
+@28
+top.core_0_output__TREADY
+top.core_1_output__TREADY
+top.core_2_output__TREADY
+top.output__TREADY
+[pattern_trace] 1
+[pattern_trace] 0
