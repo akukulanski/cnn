@@ -21,4 +21,4 @@ example usage:
     slice(dut.input__TDATA, (8, 16))
     # returns input__TDATA[8:16]
 """
-slice = lambda signal, index: (signal.value.integer >> index[0]) & (2 ** (index[1] - index[0]) - 1)
+slice_signal = lambda value, index: (value >> index[0]) & (2 ** (index[1] - index[0]) - 1)
