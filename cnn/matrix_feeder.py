@@ -11,6 +11,9 @@ def _or(signals):
 class MatrixFeeder(Elaboratable):
     """ N fifos that work synchronized to provide NxN matrixes
     of data.
+    This core has the intelligence to assert the valid output
+    signal only when the current NxN matrix corresponds to
+    a valid NxN submatrix of the image.
     """
     def __init__(self, input_w, row_length, N):
         self.input_w = input_w
