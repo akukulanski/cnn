@@ -14,3 +14,11 @@ def int_from_twos_comp(binary, bits):
     if binary & 2**(bits - 1): 
         val -= 2**(bits - 1) 
     return val
+
+
+"""
+example usage:
+    slice(dut.input__TDATA, (8, 16))
+    # returns input__TDATA[8:16]
+"""
+slice = lambda signal, index: (signal.value.integer >> index[0]) & (2 ** (index[1] - index[0]) - 1)
