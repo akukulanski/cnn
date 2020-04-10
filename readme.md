@@ -9,25 +9,41 @@ To do:
 
 * [x] MAC description
 * [x] MAC test
-* [ ] MAC synthesis (timing report)
 * [x] Pipelined tree adder description
 * [x] Pipelined tree adder test
-* [ ] Pipelined tree adder synthesis
 * [x] Dot product description
 * [x] Dot product test
-* [ ] Dot product synthesis (timing report)
 * [x] Dot product array (*farm*) block description
 * [x] Dot product array (*farm*) block test
-* [ ] Dot product array (*farm*) block synthesis (timing report)
-* [ ] Convolution 3x3 description
-* [ ] Convolution 3x3 test
-* [ ] Convolution 3x3 synthesis (timing report)
-* [ ] Convolution NxN
+* [x] Row Fifo block description
+* [ ] Row Fifo block test: PARTIALLY DONE...
+    - [x] basic test
+    - [ ] test burps
+    - [ ] split files
+    - [ ] calculate expected buffer lengths and assert
+* [ ] MatrixFeeder block description: STARTED, UNTESTED.
+* [ ] MatrixFeeder block test
+    - [ ] basic test
+    - [ ] test burps
+    - [ ] endianness test
+* [ ] Convolution integration block description
+* [ ] Convolution integration block test
 * [ ] UART interface
 * [ ] PC: Python Uart Tx/Rx
 * [ ] Sigmoid? Softmax?
 * [ ] Convolution Layer NxN * M
 * [ ] CNN
+
+Single core synthesis + timing report:
+* [ ] MAC
+* [ ] Pipelined tree adder
+* [ ] Dot product
+* [ ] Dot product array (*farm*)
+* [ ] Row Fifo
+* [ ] Matrix Feeder
+* [ ] Convolution integration (3x3)
+* [ ] 
+* [ ] 
 
 
 ### Requirements
