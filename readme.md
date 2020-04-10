@@ -16,9 +16,9 @@ To do:
 * [x] Dot product description
 * [x] Dot product test
 * [ ] Dot product synthesis (timing report)
-* [ ] Dot product array block description
-* [ ] Dot product array block test
-* [ ] Dot product array block synthesis (timing report)
+* [x] Dot product array (*farm*) block description
+* [x] Dot product array (*farm*) block test
+* [ ] Dot product array (*farm*) block synthesis (timing report)
 * [ ] Convolution 3x3 description
 * [ ] Convolution 3x3 test
 * [ ] Convolution 3x3 synthesis (timing report)
