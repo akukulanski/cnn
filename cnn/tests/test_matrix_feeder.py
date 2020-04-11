@@ -94,10 +94,10 @@ def check_data(dut, width, height, burps_in, burps_out, dummy=0):
     assert len(s_axis.buffer) == expected_output_length, f'{len(s_axis.buffer)} != {expected_output_length}'
 
     # print debug data
-    dut._log.info(f'\ninput image:\n{np.reshape(wr_data, (width, height))}')
+    dut._log.debug(f'\ninput image:\n{np.reshape(wr_data, (width, height))}')
     for i, d in enumerate(s_axis.buffer):
         tmp = list(unpack([d], test.N ** 2, test.input_w))
-        dut._log.info(f'\noutput matrix #{i}: {tmp}\n{np.reshape(tmp, (test.N, test.N))}')
+        dut._log.debug(f'\noutput matrix #{i}: {tmp}\n{np.reshape(tmp, (test.N, test.N))}')
 
     test.check_data(m_axis.buffer, s_axis.buffer)
 
