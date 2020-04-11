@@ -102,7 +102,7 @@ class DotProductTest():
         return list(pack(vector, self.n_inputs, self.input_w))[0]
 
 @cocotb.coroutine
-def check_data(dut, dummy=0):
+def check_data(dut, burps_in, burps_out, dummy=0):
     test_size = 20
 
     test = DotProductTest(dut)
@@ -114,19 +114,16 @@ def check_data(dut, dummy=0):
     coeffs = test.generate_random_vector()
     test.set_coeffs(coeffs)
 
-    cocotb.fork(test.input_monitor())
-    cocotb.fork(test.output_monitor())
-
     wr = [test.flatten(test.generate_random_vector()) for _ in range(test_size)]
 
-    dut.output__TREADY <= 1
-    yield m_axis.send(wr)
-    
-    # latency wait
-    for _ in range(test.n_inputs * 2):
-        yield RisingEdge(dut.clk)
+    cocotb.fork(test.input_monitor())
+    cocotb.fork(test.output_monitor())
+    cocotb.fork(s_axis.recv(test_size, burps_out))
 
-    dut.output__TREADY <= 0
+    yield m_axis.send(wr, burps_in)
+    
+    while len(test.buff_out) < test_size:
+        yield RisingEdge(dut.clk)
 
     dut._log.info(f'Tested {len(test.buff_out)} cases.')
     assert len(test.buff_out) == test_size, f'{len(test.buff_out)} == {test_size}'
@@ -135,7 +132,9 @@ def check_data(dut, dummy=0):
 
 
 tf_test_data = TF(check_data)
-# tf_test_data.add_option('dummy', [0] * 10) # repeat 10 times
+tf_test_data.add_option('burps_in', [False, True])
+tf_test_data.add_option('burps_out', [False, True])
+tf_test_data.add_option('dummy', [0] * 5) # repeat 5 times
 tf_test_data.generate_tests()
 
 @pytest.mark.parametrize("input_w, n_inputs", [(8, 4)])
