@@ -1,7 +1,7 @@
 from nmigen import *
 from cores_nmigen.interfaces import AxiStream
 from cnn.row_fifos import RowFifos
-from cnn.utils import _and, _or
+from cnn.utils import _incr, _and, _or
 
 class MatrixFeeder(Elaboratable):
     """ N fifos that work synchronized to provide NxN matrixes
@@ -10,13 +10,14 @@ class MatrixFeeder(Elaboratable):
     signal only when the current NxN matrix corresponds to
     a valid NxN submatrix of the image.
     """
-    def __init__(self, input_w, row_length, N):
+    def __init__(self, input_w, row_length, N, endianness=-1):
         self.input_w = input_w
         self.row_length = row_length
         self.N = N
+        self.endianness = endianness
         self.output_w = input_w * N**2
         self.input = AxiStream(width=self.input_w, direction='sink', name='input')
-        self.output = AxiStream(width=self.output_w, N=N, M=N, direction='source', name='output')
+        self.output = AxiStream(width=self.output_w, direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -28,12 +29,15 @@ class MatrixFeeder(Elaboratable):
         sync = m.d.sync
         comb = m.d.comb
 
-        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, self.row_length, self.N)
+        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, self.row_length, self.N, self.endianness)
 
-        registers = [Signal(self.input_w * self.N) for _ in range(self.N)]
+        registers = Array([Signal(self.input_w * self.N) for _ in range(self.N)])
         current_column = Signal(range(self.row_length))
 
-        comb += row_fifos.input.eq(self.input)
+        comb += [row_fifos.input.valid.eq(self.input.valid),
+                 row_fifos.input.data.eq(self.input.data),
+                 self.input.ready.eq(row_fifos.input.ready),
+                ]
 
         with m.If(row_fifos.output.accepted()):
             sync += current_column.eq(_incr(current_column, self.row_length))
@@ -52,6 +56,6 @@ class MatrixFeeder(Elaboratable):
             stop_idx = self.input_w * self.N * (row + 1)
             reg_start_idx = self.input_w * row
             reg_stop_idx = self.input_w * (row + 1)
-            comb += self.output.data[start_idx:stop_idx].eq(Cat(*[registers[n][reg_start_idx:reg_stop_idx] for n in range(self.N)]))
+            comb += self.output.data[start_idx:stop_idx].eq(Cat(*[registers[n][reg_start_idx:reg_stop_idx] for n in range(self.N)[::self.endianness]]))
 
         return m
