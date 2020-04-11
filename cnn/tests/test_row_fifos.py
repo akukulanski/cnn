@@ -83,7 +83,7 @@ class RowFifosTest():
 
 
 @cocotb.coroutine
-def check_data(dut, width, height, endianness, burps_in, burps_out=False, dummy=0):
+def check_data(dut, width, height, endianness, burps_in, burps_out, dummy=0):
     test_size = 20
 
     test = RowFifosTest(dut, width)
