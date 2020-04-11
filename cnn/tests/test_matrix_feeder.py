@@ -83,39 +83,6 @@ class MatrixFeederTest():
             assert (matrix_output == expected_submatrix).all(), f'output[{i}]: (x,y)={(idx_x,idx_y)}\n{matrix_output}\n!=\n{expected_submatrix}'
 
 
-class AxiStreamInterface(AxiStreamDriver):
-
-    @cocotb.coroutine
-    def send(self, data, burps=False):
-        data = list(data)
-        while len(data):
-            valid = 1
-            if burps:
-                valid = random.randint(0, 1)
-            self.bus.TVALID <= valid
-            if valid:
-                self.bus.TDATA <= data[0]
-            else:
-                self.bus.TDATA <= random.randint(0, 2**len(self.bus.TDATA)-1)
-            yield RisingEdge(self.clk)
-            if self.accepted():
-                data.pop(0)
-        self.bus.TVALID <= 0
-
-    @cocotb.coroutine
-    def recv(self, n, burps=False):
-        while n:
-            if burps:
-                ready = random.randint(0, 1)
-            else:
-                ready = 1
-            self.bus.TREADY <= ready
-            yield RisingEdge(self.clk)
-            if self.accepted():
-                n = n - 1
-        self.bus.TREADY <= 0
-
-
 @cocotb.coroutine
 def check_data(dut, width, height, burps_in, burps_out, dummy=0):
     test_size = 20
@@ -123,8 +90,8 @@ def check_data(dut, width, height, burps_in, burps_out, dummy=0):
     test = MatrixFeederTest(dut, width)
     yield test.init_test()
 
-    m_axis = AxiStreamInterface(dut, name='input_', clock=dut.clk)
-    s_axis = AxiStreamInterface(dut, name='output_', clock=dut.clk)
+    m_axis = AxiStreamDriver(dut, name='input_', clock=dut.clk)
+    s_axis = AxiStreamDriver(dut, name='output_', clock=dut.clk)
     
     wr_data = test.generate_incremental_image(height)
     expected_output_length = (width + 1 - test.N) * (height + 1 - test.N)
@@ -162,8 +129,8 @@ if running_cocotb:
     tf_test_data = TF(check_data)
     tf_test_data.add_option('width', [width])
     tf_test_data.add_option('height', [5])
-    tf_test_data.add_option('burps_in', [False]) #[False, True])
-    tf_test_data.add_option('burps_out', [False]) #[False, True])
+    tf_test_data.add_option('burps_in', [False, True]) # TO DO: FIX. Test NO PASA con burps_in==True.
+    tf_test_data.add_option('burps_out', [False, True])
     tf_test_data.generate_tests()
 
 
