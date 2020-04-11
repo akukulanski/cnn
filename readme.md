@@ -17,9 +17,10 @@ To do:
 * [x] Dot product array (*farm*) block test
 * [x] Row Fifo block description
 * [x] Row Fifo block test
-* [ ] MatrixFeeder block description: STARTED, UNTESTED.
-    - [ ] split files
-* [ ] MatrixFeeder block test
+* [x] MatrixFeeder block description.
+* [x] MatrixFeeder block test
+* [ ] Organize files, interfaces.
+* [ ] Maybe create AxiStreamMatrixInterface and a "flattener"
 * [ ] Convolution integration block description
 * [ ] Convolution integration block test
 * [ ] UART interface
