@@ -1,12 +1,8 @@
 from nmigen import *
 from cnn.dot_product import DotProduct
+from cnn.utils import _incr
 from cores_nmigen.interfaces import AxiStream
 
-def _incr(signal, modulo):
-    if modulo == 2 ** len(signal):
-        return signal + 1
-    else:
-        return Mux(signal == modulo - 1, 0, signal + 1)
 
 class Farm(Elaboratable):
     def __init__(self, input_w, n_inputs, n_cores):

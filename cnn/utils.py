@@ -17,6 +17,11 @@ def _required_output_bits(stage):
         if s == stage:
             return required_bits(worst_value)
 
+def _incr(signal, modulo):
+    if modulo == 2 ** len(signal):
+        return signal + 1
+    else:
+        return Mux(signal == modulo - 1, 0, signal + 1)
 
 def _and(signals):
     return Mux(Cat(*signals) == 2**len(signals)-1, 1, 0)
