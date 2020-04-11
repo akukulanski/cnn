@@ -1,6 +1,6 @@
 from nmigen import *
 from cnn.dot_product import DotProduct
-from cnn.utils import _incr
+from cores_nmigen.operations import _incr
 from cores_nmigen.interfaces import AxiStream
 
 

@@ -1,7 +1,7 @@
 from nmigen import *
 from nmigen.lib.fifo import SyncFIFOBuffered
 from cores_nmigen.interfaces import AxiStream
-from cnn.utils import _and, _or
+from cores_nmigen.operations import _and, _or
 
 
 class RowFifos(Elaboratable):
