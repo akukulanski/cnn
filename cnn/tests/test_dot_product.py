@@ -98,9 +98,11 @@ class DotProductTest():
         for inputs, coeffs, o in zip(self.buff_in, self.buff_coeffs, self.buff_out):
             assert o == sum(np.multiply(inputs, coeffs)), f'{o} != {sum(np.multiply(inputs, coeffs))} (sum(np.multiply({inputs}, {coeffs})))'
 
+    def flatten(self, vector):
+        return list(pack(vector, self.n_inputs, self.input_w))[0]
 
 @cocotb.coroutine
-def check_data(dut, dummy):
+def check_data(dut, dummy=0):
     test_size = 20
 
     test = DotProductTest(dut)
@@ -115,7 +117,7 @@ def check_data(dut, dummy):
     cocotb.fork(test.input_monitor())
     cocotb.fork(test.output_monitor())
 
-    wr = [list(pack(test.generate_random_vector(), test.n_inputs, test.input_w)) for _ in range(test_size)]
+    wr = [test.flatten(test.generate_random_vector()) for _ in range(test_size)]
 
     dut.output__TREADY <= 1
     yield m_axis.send(wr)
@@ -133,7 +135,7 @@ def check_data(dut, dummy):
 
 
 tf_test_data = TF(check_data)
-tf_test_data.add_option('dummy', [0] * 10) # repeat 10 times
+# tf_test_data.add_option('dummy', [0] * 10) # repeat 10 times
 tf_test_data.generate_tests()
 
 @pytest.mark.parametrize("input_w, n_inputs", [(8, 4)])
