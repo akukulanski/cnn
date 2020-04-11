@@ -48,6 +48,8 @@ class MatrixFeeder(Elaboratable):
             sync += registers[0].eq(row_fifos.output.data)
             for n in range(1, self.N):
                 sync += registers[n].eq(registers[n-1])
+        with m.Elif(self.output.accepted()):
+            sync += self.output.valid.eq(0)
 
         comb += row_fifos.output.ready.eq(self.output.accepted() | ~self.output.valid)
 
