@@ -27,8 +27,6 @@ class MatrixFeederTest():
         self.row_length = row_length
         self.input_w = len(self.dut.input__TDATA)
         self.output_w = len(self.dut.output__TDATA)
-        self.buff_in = []
-        self.buff_out = []
 
     @property
     def N(self):
@@ -50,20 +48,6 @@ class MatrixFeederTest():
         self.dut.rst <= 0
         yield RisingEdge(self.dut.clk)
 
-    @cocotb.coroutine
-    def input_monitor(self):
-        while True:
-            yield RisingEdge(self.dut.clk)
-            if self.dut.input__TVALID.value.integer and self.dut.input__TREADY.value.integer:
-                self.buff_in.append(self.dut.input__TDATA.value.integer)
-
-    @cocotb.coroutine
-    def output_monitor(self):
-        while True:
-            yield RisingEdge(self.dut.clk)
-            if self.dut.output__TVALID.value.integer and self.dut.output__TREADY.value.integer:
-                self.buff_out.append(self.dut.output__TDATA.value.integer)
-
     def generate_random_image(self, height):
         limits = (-2**(self.input_w - 1), 2**(self.input_w - 1) - 1)
         return [random.randint(limits[0], limits[1]) for _ in range(self.row_length * height)]
@@ -72,10 +56,10 @@ class MatrixFeederTest():
         limits = (-2**(self.input_w - 1), 2**(self.input_w - 1) - 1)
         return [int(i % limits[1]) for i in range(self.row_length * height)]
 
-    def check_data(self):
-        width, height = self.row_length, int(len(self.buff_in) / self.row_length)
-        input_image = np.reshape(self.buff_in, (height, width))
-        for i, output in enumerate(self.buff_out):
+    def check_data(self, buff_in, buff_out):
+        width, height = self.row_length, int(len(buff_in) / self.row_length)
+        input_image = np.reshape(buff_in, (height, width))
+        for i, output in enumerate(buff_out):
             matrix_output = np.reshape(list(unpack([output], self.N ** 2, self.input_w)), (self.N, self.N))
             idx_x = i % (width + 1 - self.N)
             idx_y = int(i / (width + 1 - self.N))
@@ -96,26 +80,26 @@ def check_data(dut, width, height, burps_in, burps_out, dummy=0):
     wr_data = test.generate_incremental_image(height)
     expected_output_length = (width + 1 - test.N) * (height + 1 - test.N)
 
-    cocotb.fork(test.input_monitor())
-    cocotb.fork(test.output_monitor())
+    cocotb.fork(m_axis.monitor())
+    cocotb.fork(s_axis.monitor())
     cocotb.fork(s_axis.recv(expected_output_length, burps_out))
 
     yield m_axis.send(wr_data, burps_in)
 
-    while len(test.buff_out) < expected_output_length:
+    while len(s_axis.buffer) < expected_output_length:
         yield RisingEdge(dut.clk)
 
-    dut._log.info(f'Buffer in length: {len(test.buff_in)}.')
-    dut._log.info(f'Buffer out length: {len(test.buff_out)}.')
-    assert len(test.buff_out) == expected_output_length, f'{len(test.buff_out)} != {expected_output_length}'
+    dut._log.info(f'Buffer in length: {len(m_axis.buffer)}.')
+    dut._log.info(f'Buffer out length: {len(s_axis.buffer)}.')
+    assert len(s_axis.buffer) == expected_output_length, f'{len(s_axis.buffer)} != {expected_output_length}'
 
     # print debug data
-    dut._log.debug(f'\ninput image:\n{np.reshape(wr_data, (width, height))}')
-    for i, d in enumerate(test.buff_out):
+    dut._log.info(f'\ninput image:\n{np.reshape(wr_data, (width, height))}')
+    for i, d in enumerate(s_axis.buffer):
         tmp = list(unpack([d], test.N ** 2, test.input_w))
-        dut._log.debug(f'\noutput matrix #{i}: {tmp}\n{np.reshape(tmp, (test.N, test.N))}')
+        dut._log.info(f'\noutput matrix #{i}: {tmp}\n{np.reshape(tmp, (test.N, test.N))}')
 
-    test.check_data()
+    test.check_data(m_axis.buffer, s_axis.buffer)
 
 
 try:
