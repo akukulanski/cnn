@@ -81,38 +81,6 @@ class RowFifosTest():
     def get_pixel(self, buffer, x, y):
         return buffer[self.row_length * y + x]
 
-class AxiStreamInterface(AxiStreamDriver):
-
-    @cocotb.coroutine
-    def send(self, data, burps=False):
-        data = list(data)
-        while len(data):
-            valid = 1
-            if burps:
-                valid = random.randint(0, 1)
-            self.bus.TVALID <= valid
-            if valid:
-                self.bus.TDATA <= data[0]
-            else:
-                self.bus.TDATA <= random.randint(0, 2**len(self.bus.TDATA)-1)
-            yield RisingEdge(self.clk)
-            if self.accepted():
-                data.pop(0)
-        self.bus.TVALID <= 0
-
-    @cocotb.coroutine
-    def recv(self, n, burps=False):
-        while n:
-            if burps:
-                ready = random.randint(0, 1)
-            else:
-                ready = 1
-            self.bus.TREADY <= ready
-            yield RisingEdge(self.clk)
-            if self.accepted():
-                n = n - 1
-        self.bus.TREADY <= 0
-
 
 @cocotb.coroutine
 def check_data(dut, width, height, endianness, burps_in, burps_out=False, dummy=0):
@@ -121,8 +89,8 @@ def check_data(dut, width, height, endianness, burps_in, burps_out=False, dummy=
     test = RowFifosTest(dut, width)
     yield test.init_test()
 
-    m_axis = AxiStreamInterface(dut, name='input_', clock=dut.clk)
-    s_axis = AxiStreamInterface(dut, name='output_', clock=dut.clk)
+    m_axis = AxiStreamDriver(dut, name='input_', clock=dut.clk)
+    s_axis = AxiStreamDriver(dut, name='output_', clock=dut.clk)
     
     wr_data = test.generate_random_image(height)
     expected_output_length = len(wr_data) - width * (test.N - 1)
