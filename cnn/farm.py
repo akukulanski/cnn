@@ -9,11 +9,11 @@ class Farm(Elaboratable):
         self.input_w = input_w
         self.n_inputs = n_inputs
         self.n_cores = n_cores
-        self.output_w = DotProduct(input_w, n_inputs).output_w # dummy just to calculate
+        self.cores = [DotProduct(input_w, n_inputs) for _ in range(n_cores)]
+        self.output_w = self.cores[0].output_w
         self.input = AxiStream(width=self.input_w*self.n_inputs, direction='sink', name='input')
         self.coeff = [Signal(self.input_w, name='coeff_'+str(i)) for i in range(self.n_inputs)] # To do: unify both input interfaces.
         self.output = AxiStream(self.output_w, direction='source', name='output')
-        self.cores = [DotProduct(input_w, n_inputs) for _ in range(n_cores)]
 
     def get_ports(self):
         ports = []
