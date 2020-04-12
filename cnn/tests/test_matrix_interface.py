@@ -90,12 +90,13 @@ if running_cocotb:
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize("width, shape", [(8, (4,2)),
-                                           #(8, (4,3,2)),
-                                           ])
+                                          (8, (4,3,2)),
+                                         ])
 def test_matrix_interface(width, shape):
     os.environ['coco_param_shape'] = str(shape)
     core = MatrixInterfaceBypass(width=width,
                                  shape=shape,
                                 )
     ports = core.get_ports()
-    run(core, 'cnn.tests.test_matrix_interface', ports=ports, vcd_file=f'./test_matrix_interface_i{width}_shape{shape}.vcd')
+    printable_shape = '_'.join([str(i) for i in shape])
+    run(core, 'cnn.tests.test_matrix_interface', ports=ports, vcd_file=f'./test_matrix_interface_i{width}_shape{printable_shape}.vcd')
