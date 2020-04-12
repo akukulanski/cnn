@@ -15,9 +15,6 @@ class MatrixPort():
         assert len(tup) == len(self.interface.shape), f'{len(tup)} == {len(self.interface.shape)}'
         return getattr(self.interface, self.interface.get_signal_name(tup))
 
-    # def __iter__(self):
-    #     return _recursive_iter(self.shape)
-
 
 class AxiStreamMatrix(MetaStream):
 
