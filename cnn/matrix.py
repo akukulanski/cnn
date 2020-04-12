@@ -13,6 +13,14 @@ def matrix_indexes(shape):
     return _recursive_iter(shape)
 
 
+def get_dimensions(shape):
+    return _len(shape)
+
+
+def get_n_elements(shape):
+    return np.prod(shape)
+
+
 def get_matrix_element(matrix, indexes):
     tmp = matrix
     for idx in indexes:
@@ -26,6 +34,12 @@ def set_matrix_element(matrix, indexes, value):
         tmp = tmp[idx]
     assert np.shape(tmp[indexes[-1]]) == np.shape(value), f'{np.shape(tmp[indexes[-1]])} = {np.shape(value)}'
     tmp[indexes[-1]] = copy.deepcopy(value)
+
+
+def _len(shape):
+    if hasattr(shape, '__iter__'):
+        return len(shape)
+    return 1
 
 
 def _recursive_iter(shape, prev_idx=()):

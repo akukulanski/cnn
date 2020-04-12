@@ -1,7 +1,5 @@
 from cores_nmigen.interfaces import MetaStream
-from cnn.matrix import matrix_indexes
-import numpy as np
-import copy
+import cnn.matrix as mat
 
 
 class MatrixPort():
@@ -22,29 +20,33 @@ class AxiStreamMatrix(MetaStream):
         self.shape = shape
         self.width = width
         self.DATA_FIELDS = []
-        for idx in matrix_indexes(shape):
+        for idx in mat.matrix_indexes(shape):
             text_string = self.get_signal_name(idx)
             self.DATA_FIELDS.append((text_string, width))
         MetaStream.__init__(self, width, direction=direction, name=name, fields=fields)
-        self.matrix = MatrixPort(self)
 
     def get_signal_name(self, indexes):
         return 'TDATA_' + '_'.join([str(i) for i in indexes])
 
     @property
+    def matrix(self):
+        return MatrixPort(self)
+    
+
+    @property
     def dimensions(self):
-        return len(self.shape)
+        return mat.get_dimensions(self.shape)
 
     @property
     def n_elements(self):
-        return np.prod(self.shape)
+        return mat.get_n_elements(self.shape)
 
     def accepted(self):
         return (self.TVALID == 1) & (self.TREADY == 1)
 
     @property
     def data_ports(self):
-        for idx in matrix_indexes(self.shape):
+        for idx in mat.matrix_indexes(self.shape):
             yield getattr(self, self.get_signal_name(idx))
 
     def connect_data_ports(self, other):

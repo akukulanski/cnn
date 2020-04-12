@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.matrix_interface import MatrixInterfaceBypass
-from cnn.matrix import matrix_indexes, create_empty_matrix, set_matrix_element
+import cnn.matrix as mat
 from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp, slice_signal
 from cnn.tests.interfaces import AxiStreamMatrixDriver
 from cores_nmigen.test.utils import pack, unpack
@@ -35,9 +35,9 @@ def incremental_matrix(shape, size):
     data = []
     count = 0
     for i in range(size):
-        matrix = create_empty_matrix(shape)
-        for idx in matrix_indexes(shape):
-            set_matrix_element(matrix, idx, count)
+        matrix = mat.create_empty_matrix(shape)
+        for idx in mat.matrix_indexes(shape):
+            mat.set_matrix_element(matrix, idx, count)
             count += 1
         data.append(matrix)
     return data
