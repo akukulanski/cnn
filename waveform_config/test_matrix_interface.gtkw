@@ -1,0 +1,48 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Sun Apr 12 23:22:04 2020
+[*]
+[dumpfile] "./test_matrix_interface_i8_shape4_2.vcd"
+[dumpfile_mtime] "Sun Apr 12 23:05:16 2020"
+[dumpfile_size] 5387
+[savefile] "./waveform_config/test_matrix_interface.gtkw"
+[timestart] 0
+[size] 1920 1016
+[pos] -1 -1
+*-14.945998 10000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 273
+[signals_width] 206
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+top.clk
+@29
+top.dummy
+@28
+top.input__TLAST
+top.input__TVALID
+top.input__TREADY
+@200
+-INPUT
+@22
+top.input__TDATA_0_0[7:0]
+top.input__TDATA_0_1[7:0]
+top.input__TDATA_1_0[7:0]
+top.input__TDATA_1_1[7:0]
+top.input__TDATA_2_0[7:0]
+top.input__TDATA_2_1[7:0]
+top.input__TDATA_3_0[7:0]
+top.input__TDATA_3_1[7:0]
+@200
+-OUTPUT
+@22
+top.output__TDATA_0_0[7:0]
+top.output__TDATA_0_1[7:0]
+top.output__TDATA_1_0[7:0]
+top.output__TDATA_1_1[7:0]
+top.output__TDATA_2_0[7:0]
+top.output__TDATA_2_1[7:0]
+top.output__TDATA_3_0[7:0]
+top.output__TDATA_3_1[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
