@@ -1,10 +1,10 @@
 from cores_nmigen.interfaces import MetaStream
-from cnn.matrix import Matrix, matrix_indexes
+from cnn.matrix import matrix_indexes
 import numpy as np
 import copy
 
 
-class MatrixPort(Matrix):
+class MatrixPort():
 
     def __init__(self, interface):
         self.interface = interface
