@@ -37,47 +37,7 @@ def _recursive_iter(shape, prev_idx=()):
             yield from _recursive_iter(shape[1:], current_idx)
 
 
-class Matrix(object):
-    
-    def __init__(self, shape=(1,)):
-        self.shape = shape
-        self.matrix = create_empty_matrix(shape)
-
-    def _len(self, value):
-        if hasattr(value, '__iter__'):
-            return len(value)
-        return 1
-
-    def __iter__(self):
-        return _recursive_iter(self.shape)
-
-    def __getitem__(self, tup):
-        if not hasattr(tup, '__iter__'):
-            tup = (tup,)
-        return self._get_value(tup)
-
-    def __setitem__(self, tup, value):
-        if not hasattr(tup, '__iter__'):
-            tup = (tup,)
-        return self._set_value(tup, value)
-
-    def _get_value(self, indexes):
-        tmp = self.matrix
-        for idx in indexes:
-            tmp = tmp[idx]
-        return copy.deepcopy(tmp)
-
-    def _set_value(self, indexes, value):
-        tmp = self.matrix
-        for idx in indexes[:-1]:
-            tmp = tmp[idx]
-        print(f'prev: {tmp[indexes[-1]]}\nnew: {value}')
-        assert np.shape(tmp[indexes[-1]]) == np.shape(value), f'{np.shape(tmp[indexes[-1]])} = {np.shape(value)}'
-        tmp[indexes[-1]] = copy.deepcopy(value)
-
-
 # def linear2matrix(linear, shape)
-#     # is this a reshape?
 #     n_elements = np.prod(shape)
 #     matrix = Matrix(shape)
 #     for i, value in range(list_of_values):
