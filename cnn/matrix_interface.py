@@ -1,5 +1,5 @@
 from nmigen import *
-from cnn.matrix import matrix_indexes
+import cnn.matrix as mat
 from cnn.interfaces import AxiStreamMatrix
 
 
@@ -22,7 +22,6 @@ class MatrixInterfaceBypass(Elaboratable):
         comb = m.d.comb
 
         dummy = Signal() # just to force the existence of a clock domain
-
         sync += dummy.eq(~dummy)
 
         comb += [self.output.valid.eq(self.input.valid),
@@ -31,5 +30,21 @@ class MatrixInterfaceBypass(Elaboratable):
                 ]
 
         comb += self.output.connect_data_ports(self.input)
+
+        #######################################################################
+        #
+        # > Alternative methods to connect dataports
+        #
+        # * Iterating through data_ports
+        #
+        # for data_i, data_o in zip(self.input.data_ports, self.output.data_ports):
+        #     comb += data_o.eq(data_i)
+        #
+        # * Individual assignment iterating through indexes
+        #
+        # for idx in mat.matrix_indexes(self.shape):
+        #    comb += self.output.matrix[idx].eq(self.input.matrix[idx])
+        #
+        #######################################################################
 
         return m
