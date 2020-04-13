@@ -19,8 +19,9 @@ To do:
 * [x] Row Fifo block test
 * [x] MatrixFeeder block description.
 * [x] MatrixFeeder block test
+* [x] AxiStreamMatrix interface
+* [ ] Implement AxiStreamInterfaces in existing cores
 * [ ] Organize files, interfaces.
-* [ ] Maybe create AxiStreamMatrixInterface and a "flattener"
 * [ ] Convolution integration block description
 * [ ] Convolution integration block test
 * [ ] UART interface
