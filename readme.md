@@ -20,7 +20,7 @@ To do:
 * [x] MatrixFeeder block description.
 * [x] MatrixFeeder block test
 * [x] AxiStreamMatrix interface
-* [ ] Implement AxiStreamInterfaces in existing cores
+* [x] Implement AxiStreamMatrix interface in existing cores
 * [ ] Organize files, interfaces.
 * [ ] Convolution integration block description
 * [ ] Convolution integration block test
@@ -47,7 +47,7 @@ Single core synthesis + timing report:
 * [nmigen](https://github.com/m-labs/nmigen) v0.1
 * [yosys](https://github.com/YosysHQ/yosys) v0.9+
 * [cocotb](https://github.com/cocotb/cocotb)
-* [icarus verilog v10.1](https://github.com/akukulanski/nmigen-cocotb) (reported problems with v10.2+)
+* [icarus verilog v10.1](hhttps://github.com/steveicarus/iverilog) (reported problems with v10.2+)
 * [nmigen-cocotb](https://github.com/akukulanski/nmigen-cocotb)
 
 ### Testing
