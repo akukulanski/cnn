@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Wed Apr 15 00:22:13 2020
+[*]
+[dumpfile] "./test_matrix_feeder_i8_rowlength5_N3_invertFalse.vcd"
+[dumpfile_mtime] "Wed Apr 15 00:16:31 2020"
+[dumpfile_size] 512451
+[savefile] "./waveform_config/test_matrix_feeder.gtkw"
+[timestart] 0
+[size] 1920 1016
+[pos] -1 -1
+*-15.424837 160900 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 329
+[signals_width] 326
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+top.clk
+@200
+-INPUT
+@28
+top.input__TVALID
+top.input__TREADY
+@22
+top.input__TDATA[7:0]
+@200
+-ROW_FIFOS
+@28
+top.row_fifos_output__TVALID
+top.row_fifos_output__TREADY
+@22
+top.row_fifos_output__TDATA_0[7:0]
+top.row_fifos_output__TDATA_1[7:0]
+top.row_fifos_output__TDATA_2[7:0]
+@200
+-SHIFT REGISTERS
+@28
+top.submatrix_regs_output__TVALID
+@29
+top.submatrix_regs_output__TREADY
+@22
+top.submatrix_regs_output__TDATA_0_0[7:0]
+top.submatrix_regs_output__TDATA_0_1[7:0]
+top.submatrix_regs_output__TDATA_0_2[7:0]
+top.submatrix_regs_output__TDATA_1_0[7:0]
+top.submatrix_regs_output__TDATA_1_1[7:0]
+top.submatrix_regs_output__TDATA_1_2[7:0]
+top.submatrix_regs_output__TDATA_2_0[7:0]
+top.submatrix_regs_output__TDATA_2_1[7:0]
+top.submatrix_regs_output__TDATA_2_2[7:0]
+@200
+-OUTPUT
+@28
+top.output__TVALID
+top.output__TREADY
+@24
+top.output__TDATA_0_0[7:0]
+top.output__TDATA_0_1[7:0]
+top.output__TDATA_0_2[7:0]
+top.output__TDATA_1_0[7:0]
+top.output__TDATA_1_1[7:0]
+top.output__TDATA_1_2[7:0]
+top.output__TDATA_2_0[7:0]
+top.output__TDATA_2_1[7:0]
+top.output__TDATA_2_2[7:0]
+[pattern_trace] 1
+[pattern_trace] 0

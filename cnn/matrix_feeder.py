@@ -2,6 +2,7 @@ from nmigen import *
 from cores_nmigen.interfaces import AxiStream
 from cores_nmigen.operations import _incr, _and, _or
 from cnn.row_fifos import RowFifos
+from cnn.interfaces import AxiStreamMatrix
 
 class MatrixFeeder(Elaboratable):
     """ N fifos that work synchronized to provide NxN matrixes
@@ -10,28 +11,42 @@ class MatrixFeeder(Elaboratable):
     signal only when the current NxN matrix corresponds to
     a valid NxN submatrix of the image.
     """
-    def __init__(self, input_w, row_length, N, endianness=-1):
-        self.input_w = input_w
+    def __init__(self, input_w, row_length, N, invert=False):
         self.row_length = row_length
-        self.N = N
-        self.endianness = endianness
-        self.output_w = input_w * N**2
-        self.input = AxiStream(width=self.input_w, direction='sink', name='input')
-        self.output = AxiStream(width=self.output_w, direction='source', name='output')
+        self.invert = invert
+        self.input = AxiStream(width=input_w, direction='sink', name='input')
+        self.output = AxiStreamMatrix(width=input_w, shape=(N,N), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
 
+    @property
+    def input_w(self):
+        return self.input.width
+
+    @property
+    def output_w(self):
+        return self.input_w
+
+    @property
+    def shape(self):
+        return self.output.shape
+
+    @property
+    def N(self):
+        return self.output.shape[0]
+    
+
     def elaborate(self, platform):
         m = Module()
         sync = m.d.sync
         comb = m.d.comb
 
-        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, self.row_length, self.N, self.endianness)
+        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, self.row_length, self.N, self.invert)
+        m.submodules.submatrix_regs = submatrix = SubmatrixRegisters(self.input_w, self.N, self.invert)
 
-        registers = Array([Signal(self.input_w * self.N) for _ in range(self.N)])
         current_column = Signal(range(self.row_length))
 
         comb += [row_fifos.input.valid.eq(self.input.valid),
@@ -39,25 +54,84 @@ class MatrixFeeder(Elaboratable):
                  self.input.ready.eq(row_fifos.input.ready),
                 ]
 
-        with m.If(row_fifos.output.accepted()):
+        comb += [submatrix.input.valid.eq(row_fifos.output.valid),
+                 submatrix.input.connect_data_ports(row_fifos.output),
+                 row_fifos.output.ready.eq(submatrix.input.ready),
+                ]
+
+        comb += [self.output.connect_data_ports(submatrix.output),
+                ]
+
+        with m.If(submatrix.output.accepted()):
             sync += current_column.eq(_incr(current_column, self.row_length))
-            with m.If(current_column < self.N - 1):
-                sync += self.output.valid.eq(0)
-            with m.Else():
-                sync += self.output.valid.eq(1)
-            sync += registers[0].eq(row_fifos.output.data)
-            for n in range(1, self.N):
-                sync += registers[n].eq(registers[n-1])
+
+        # logic to dismiss data when the output matrix is not
+        # a valid submatrix of the input.
+        with m.If(current_column < self.N - 1):
+            comb += [self.output.valid.eq(0),
+                     submatrix.output.ready.eq(1),
+                    ]
+        with m.Else():
+            comb += [self.output.valid.eq(submatrix.output.valid),
+                     submatrix.output.ready.eq(self.output.ready),
+                    ]
+
+        return m
+
+
+class SubmatrixRegisters(Elaboratable):
+
+    def __init__(self, input_w, N, invert=False):
+        self.invert = invert
+        self.input = AxiStreamMatrix(width=input_w, shape=(N,), direction='sink', name='input')
+        self.output = AxiStreamMatrix(width=input_w, shape=(N,N), direction='source', name='output')
+
+    def get_ports(self):
+        ports = [self.input[f] for f in self.input.fields]
+        ports += [self.output[f] for f in self.output.fields]
+        return ports
+
+    @property
+    def input_w(self):
+        return self.input.width
+
+    @property
+    def output_w(self):
+        return self.output.width
+
+    @property
+    def shape_i(self):
+        return self.input.shape
+
+    @property
+    def shape_o(self):
+        return self.output.shape
+
+    @property
+    def N(self):
+        return self.output.shape[0]
+
+    def elaborate(self, platform):
+        m = Module()
+        sync = m.d.sync
+        comb = m.d.comb
+
+        if self.invert:
+            _col = lambda col: col
+        else:
+            _col = lambda col: self.N - 1 - col
+
+        with m.If(self.input.accepted()):
+            for row in range(self.N): # row iteration
+                sync += self.output.matrix[row, _col(0)].eq(self.input.matrix[row]) # append column from input
+                for col in range(1, self.N): # shift to the right the other columns
+                    sync += self.output.matrix[row, _col(col)].eq(self.output.matrix[row, _col(col-1)])
+
+        with m.If(self.input.accepted()):
+            sync += self.output.valid.eq(1)
         with m.Elif(self.output.accepted()):
             sync += self.output.valid.eq(0)
 
-        comb += row_fifos.output.ready.eq(self.output.accepted() | ~self.output.valid)
-
-        for row in range(self.N):
-            start_idx = self.input_w * self.N * row
-            stop_idx = self.input_w * self.N * (row + 1)
-            reg_start_idx = self.input_w * row
-            reg_stop_idx = self.input_w * (row + 1)
-            comb += self.output.data[start_idx:stop_idx].eq(Cat(*[registers[n][reg_start_idx:reg_stop_idx] for n in range(self.N)[::self.endianness]]))
+        comb += self.input.ready.eq(self.output.accepted() | ~self.output.valid)
 
         return m
