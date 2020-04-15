@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.dot_product import DotProduct
-from cnn.tests.utils import int_from_twos_comp
+from cnn.tests.utils import int_from_twos_comp, vcd_only_if_env
 import cnn.matrix as mat
 from cnn.tests.interfaces import AxiStreamMatrixDriver
 from cores_nmigen.test.interfaces import AxiStreamDriver
@@ -109,4 +109,5 @@ def test_dot_product(input_w, shape):
                       shape=shape)
     ports = core.get_ports()
     printable_shape = '_'.join([str(i) for i in shape])
-    run(core, 'cnn.tests.test_dot_product', ports=ports, vcd_file=f'./test_dot_product_i{input_w}_shape{printable_shape}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_dot_product_i{input_w}_shape{printable_shape}.vcd')
+    run(core, 'cnn.tests.test_dot_product', ports=ports, vcd_file=vcd_file)

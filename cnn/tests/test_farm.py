@@ -1,6 +1,7 @@
 from nmigen_cocotb import run
 from cnn.farm import Farm
 from cnn.tests.test_dot_product import check_data
+from cnn.tests.utils import vcd_only_if_env
 import pytest
 import os
 
@@ -42,4 +43,5 @@ def test_farm(input_w, shape, n_cores):
                 n_cores=n_cores)
     ports = core.get_ports()
     printable_shape = '_'.join([str(i) for i in shape])
-    run(core, 'cnn.tests.test_farm', ports=ports, vcd_file=f'./test_farm_i{input_w}_shape{printable_shape}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_farm_i{input_w}_shape{printable_shape}.vcd')
+    run(core, 'cnn.tests.test_farm', ports=ports, vcd_file=vcd_file)

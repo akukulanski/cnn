@@ -2,6 +2,7 @@ from nmigen_cocotb import run
 from cnn.row_fifos import RowFifos
 from cores_nmigen.test.interfaces import AxiStreamDriver
 from cnn.tests.interfaces import AxiStreamMatrixDriver
+from cnn.tests.utils import vcd_only_if_env
 import pytest
 import numpy as np
 import os
@@ -117,5 +118,6 @@ def test_row_fifos(input_w, row_length, N, invert):
                     row_length=row_length,
                     N=N,
                     invert=invert)
+    vcd_file = vcd_only_if_env(f'./test_row_fifos_i{input_w}_rowlength{row_length}_N{N}_invert{int(invert)}.vcd')
     ports = core.get_ports()
-    run(core, 'cnn.tests.test_row_fifos', ports=ports, vcd_file=f'./test_row_fifos_i{input_w}_rowlength{row_length}_N{N}_invert{int(invert)}.vcd')
+    run(core, 'cnn.tests.test_row_fifos', ports=ports, vcd_file=vcd_file)

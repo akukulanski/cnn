@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.mac import MAC
-from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp
+from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp, vcd_only_if_env
 import pytest
 import random
 from math import ceil
@@ -112,7 +112,6 @@ def check_data(dut):
 
 
 tf_test_data = TF(check_data)
-# tf_test_data.add_option('multiple', [True, False])
 tf_test_data.generate_tests()
 
 @pytest.mark.parametrize("input_w, output_w", [(8, 24),])
@@ -120,4 +119,5 @@ def test_mac(input_w, output_w):
     core = MAC(input_w=input_w,
                output_w=output_w)
     ports = core.get_ports()
-    run(core, 'cnn.tests.test_mac', ports=ports, vcd_file=f'./test_mac_i{input_w}_o{output_w}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_mac_i{input_w}_o{output_w}.vcd')
+    run(core, 'cnn.tests.test_mac', ports=ports, vcd_file=vcd_file)

@@ -1,3 +1,4 @@
+import os
 
 def twos_comp_from_int(val, bits):
     """compute the 2's complement of int value val"""
@@ -15,6 +16,8 @@ def int_from_twos_comp(binary, bits):
         val -= 2**(bits - 1) 
     return val
 
+
+vcd_only_if_env = lambda filename, env='WAVEFORM': filename if env in os.environ else None
 
 """
 example usage:

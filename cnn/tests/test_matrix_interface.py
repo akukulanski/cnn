@@ -1,7 +1,7 @@
 from nmigen_cocotb import run
 from cnn.matrix_interface import MatrixInterfaceBypass
 import cnn.matrix as mat
-from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp, slice_signal
+from cnn.tests.utils import vcd_only_if_env
 from cnn.tests.interfaces import AxiStreamMatrixDriver
 from cores_nmigen.test.utils import pack, unpack
 import pytest
@@ -99,4 +99,5 @@ def test_matrix_interface(width, shape):
                                 )
     ports = core.get_ports()
     printable_shape = '_'.join([str(i) for i in shape])
-    run(core, 'cnn.tests.test_matrix_interface', ports=ports, vcd_file=f'./test_matrix_interface_i{width}_shape{printable_shape}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_matrix_interface_i{width}_shape{printable_shape}.vcd')
+    run(core, 'cnn.tests.test_matrix_interface', ports=ports, vcd_file=vcd_file)

@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.adder import PipelinedTreeAdder
-from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp
+from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp, vcd_only_if_env
 import pytest
 import random
 from math import ceil, log2
@@ -141,4 +141,5 @@ def test_adder(input_w, stages):
     core = PipelinedTreeAdder(input_w=input_w,
                               stages=stages)
     ports = core.get_ports()
-    run(core, 'cnn.tests.test_adder', ports=ports, vcd_file=f'./test_adder_i{input_w}_s{stages}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_adder_i{input_w}_s{stages}.vcd')
+    run(core, 'cnn.tests.test_adder', ports=ports, vcd_file=vcd_file)

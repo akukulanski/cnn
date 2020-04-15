@@ -1,7 +1,8 @@
 from nmigen_cocotb import run
 from cnn.matrix_feeder import MatrixFeeder
-from cores_nmigen.test.interfaces import AxiStreamDriver
 from cnn.tests.interfaces import AxiStreamMatrixDriver
+from cnn.tests.utils import vcd_only_if_env
+from cores_nmigen.test.interfaces import AxiStreamDriver
 import pytest
 import numpy as np
 import os
@@ -102,8 +103,8 @@ if running_cocotb:
     tf_test_data.add_option('width', [width])
     tf_test_data.add_option('height', [5])
     tf_test_data.add_option('invert', [invert])
-    # tf_test_data.add_option('burps_in', [False, True])
-    # tf_test_data.add_option('burps_out', [False, True])
+    tf_test_data.add_option('burps_in', [False, True])
+    tf_test_data.add_option('burps_out', [False, True])
     tf_test_data.generate_tests()
 
 
@@ -120,4 +121,5 @@ def test_matrix_feeder(input_w, row_length, N, invert):
                         N=N,
                         invert=invert)
     ports = core.get_ports()
-    run(core, 'cnn.tests.test_matrix_feeder', ports=ports, vcd_file=f'./test_matrix_feeder_i{input_w}_rowlength{row_length}_N{N}_invert{invert}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_matrix_feeder_i{input_w}_rowlength{row_length}_N{N}_invert{invert}.vcd')
+    run(core, 'cnn.tests.test_matrix_feeder', ports=ports, vcd_file=vcd_file)
