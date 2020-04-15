@@ -7,28 +7,30 @@ Implementing a CNN in a Lattice ICE40HX4K.
 
 To do:
 
-* [x] MAC description
-* [x] MAC test
-* [x] Pipelined tree adder description
-* [x] Pipelined tree adder test
-* [x] Dot product description
-* [x] Dot product test
-* [x] Dot product array (*farm*) block description
-* [x] Dot product array (*farm*) block test
-* [x] Row Fifo block description
-* [x] Row Fifo block test
-* [x] MatrixFeeder block description.
-* [x] MatrixFeeder block test
+* [x] MAC HDL
+* [x] MAC testbench
+* [x] Pipelined tree adder HDL
+* [x] Pipelined tree adder testbench
+* [x] Dot product HDL
+* [x] Dot product testbench
+* [x] Dot product array (*farm*) HDL
+* [x] Dot product array (*farm*) testbench
+* [x] Row Fifo HDL
+* [x] Row Fifo testbench
+* [x] MatrixFeeder HDL.
+* [x] MatrixFeeder testbench
 * [x] AxiStreamMatrix interface
 * [x] Implement AxiStreamMatrix interface in existing cores
-* [ ] Organize files, interfaces.
-* [ ] Convolution integration block description
-* [ ] Convolution integration block test
+* [ ] Convolution integration HDL
+* [ ] Convolution integration testbench
+* [ ] Paralell convolution HDL
+* [ ] Paralell convolution testbench
 * [ ] UART interface
 * [ ] PC: Python Uart Tx/Rx
 * [ ] Sigmoid? Softmax?
 * [ ] Convolution Layer NxN * M
 * [ ] CNN
+* [ ] Organize files, interfaces.
 
 Single core synthesis + timing report:
 * [ ] MAC
