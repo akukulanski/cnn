@@ -1,17 +1,17 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Fri Apr 10 17:35:20 2020
+[*] Mon Apr 13 02:58:05 2020
 [*]
-[dumpfile] "/home/kuku/STORAGE/estructura/Personales/Desarrollo/repositories/cnn/test_row_fifos_i8_rowlength5_N3.vcd"
-[dumpfile_mtime] "Fri Apr 10 17:32:35 2020"
-[dumpfile_size] 40679
-[savefile] "/home/kuku/STORAGE/estructura/Personales/Desarrollo/repositories/cnn/waveform_config/test:.gtkw"
+[dumpfile] "./test_row_fifos_i8_rowlength5_N3_invert0.vcd"
+[dumpfile_mtime] "Mon Apr 13 02:55:27 2020"
+[dumpfile_size] 23663
+[savefile] "./waveform_config/test_row_fifos.gtkw"
 [timestart] 0
 [size] 1920 1016
-[pos] -451 -220
-*-15.400191 44100 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-15.242665 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [sst_width] 211
-[signals_width] 182
+[signals_width] 190
 [sst_expanded] 1
 [sst_vpaned_height] 292
 @28
@@ -21,14 +21,17 @@ top.clk
 @28
 top.input__TVALID
 top.input__TREADY
-@23
+@22
 top.input__TDATA[7:0]
 @200
 -OUTPUT
-@28
+@29
 top.output__TVALID
+@28
 top.output__TREADY
 @22
-top.output__TDATA[23:0]
+top.output__TDATA_0[7:0]
+top.output__TDATA_1[7:0]
+top.output__TDATA_2[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

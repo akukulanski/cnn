@@ -1,5 +1,6 @@
 from nmigen import *
 from nmigen.lib.fifo import SyncFIFOBuffered
+from cnn.interfaces import AxiStreamMatrix
 from cores_nmigen.interfaces import AxiStream
 from cores_nmigen.operations import _and, _or
 
@@ -9,20 +10,32 @@ class RowFifos(Elaboratable):
     vector of data.
     """
 
-    def __init__(self, input_w, row_length, N, endianness=-1):
-        assert endianness in (-1, 1)
-        self.input_w = input_w
+    def __init__(self, input_w, row_length, N, invert=False):
         self.row_length = row_length
-        self.N = N
-        self.endianness = endianness
-        self.output_w = input_w * N
-        self.input = AxiStream(width=self.input_w, direction='sink', name='input')
-        self.output = AxiStream(width=self.output_w, direction='source', name='output')
+        self.invert = invert
+        self.input = AxiStream(width=input_w, direction='sink', name='input')
+        self.output = AxiStreamMatrix(width=input_w, shape=(N,), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
+
+    @property
+    def input_w(self):
+        return self.input.width
+
+    @property
+    def output_w(self):
+        return self.output.width
+
+    @property
+    def shape(self):
+        return self.output.shape
+
+    @property
+    def N(self):
+        return self.output.shape[0]
 
     def elaborate(self, platform):
         m = Module()
@@ -62,8 +75,13 @@ class RowFifos(Elaboratable):
         
         # output
         comb += [self.output.valid.eq(_and(fifo_r_valid)),
-                 self.output.data.eq(Cat(*[fifo[n].r_data for n in range(self.N)[::self.endianness]])),
                 ]
+
+        for n in range(self.N):
+            if self.invert:
+                comb += self.output.matrix[n].eq(fifo[n].r_data)
+            else:
+                comb += self.output.matrix[n].eq(fifo[self.N-1-n].r_data)
 
         return m
 
