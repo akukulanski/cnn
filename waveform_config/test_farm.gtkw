@@ -1,57 +1,54 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Fri Apr 10 00:30:22 2020
+[*] Mon Apr 13 01:44:20 2020
 [*]
-[dumpfile] "./test_farm_i8_n4_c3.vcd"
-[dumpfile_mtime] "Fri Apr 10 00:29:03 2020"
-[dumpfile_size] 63484
-[savefile] "./waveform_config/test_farm.gtkw"
+[dumpfile] "./test_farm_i8_shape4_2.vcd"
+[dumpfile_mtime] "Mon Apr 13 01:42:58 2020"
+[dumpfile_size] 2144377
+[savefile] "./waveform_config/test_dot_product.gtkw"
 [timestart] 0
 [size] 1920 1016
 [pos] -1 -1
-*-16.143795 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
-[treeopen] top.
+*-15.170227 46200 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [sst_width] 211
-[signals_width] 222
+[signals_width] 214
 [sst_expanded] 1
-[sst_vpaned_height] 292
+[sst_vpaned_height] 291
 @28
 top.clk
 @200
--INPUT
-@24
-top.current_core_sink[1:0]
-@200
--VALID_I
+-INPUT_A
 @28
-top.core_0_input__TVALID
-top.core_1_input__TVALID
-top.core_2_input__TVALID
-top.input__TVALID
+top.input_a__TVALID
+@421
+top.input_a__TDATA_0_0[7:0]
+top.input_a__TDATA_0_1[7:0]
+top.input_a__TDATA_1_0[7:0]
+top.input_a__TDATA_1_1[7:0]
+top.input_a__TDATA_2_0[7:0]
+top.input_a__TDATA_2_1[7:0]
+top.input_a__TDATA_3_0[7:0]
+top.input_a__TDATA_3_1[7:0]
+@22
+top.tmp_input_a[63:0]
 @200
--READY_I
-@28
-top.core_0_input__TREADY
-top.core_1_input__TREADY
-top.core_2_input__TREADY
-top.input__TREADY
+-INPUT_B
+@420
+top.input_b__TDATA_0_0[7:0]
+top.input_b__TDATA_0_1[7:0]
+top.input_b__TDATA_1_0[7:0]
+top.input_b__TDATA_1_1[7:0]
+top.input_b__TDATA_2_0[7:0]
+top.input_b__TDATA_2_1[7:0]
+top.input_b__TDATA_3_0[7:0]
+top.input_b__TDATA_3_1[7:0]
+@22
+top.tmp_input_b[63:0]
 @200
 -OUTPUT
-@25
-top.current_core_source[1:0]
-@200
--VALID_O
 @28
-top.core_0_output__TVALID
-top.core_1_output__TVALID
-top.core_2_output__TVALID
 top.output__TVALID
-@200
--READY_O
-@28
-top.core_0_output__TREADY
-top.core_1_output__TREADY
-top.core_2_output__TREADY
-top.output__TREADY
+@420
+top.output__TDATA[18:0]
 [pattern_trace] 1
 [pattern_trace] 0
