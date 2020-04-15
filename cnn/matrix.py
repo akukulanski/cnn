@@ -18,7 +18,7 @@ def get_dimensions(shape):
 
 
 def get_n_elements(shape):
-    return np.prod(shape)
+    return int(np.prod(shape))
 
 
 def get_matrix_element(matrix, indexes):
@@ -50,6 +50,8 @@ def _recursive_iter(shape, prev_idx=()):
         else:
             yield from _recursive_iter(shape[1:], current_idx)
 
+def flatten(matrix):
+    return [get_matrix_element(matrix, idx) for idx in matrix_indexes(np.shape(matrix))]
 
 # def linear2matrix(linear, shape)
 #     n_elements = np.prod(shape)

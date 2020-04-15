@@ -46,3 +46,7 @@ class AxiStreamMatrix(MetaStream):
                 assert len(tup) == len(interface.shape), f'{len(tup)} == {len(interface.shape)}'
                 return getattr(interface, interface.get_signal_name(tup))
         return MatrixPort()
+
+    @property
+    def flatten_matrix(self):
+        return [self.matrix[idx] for idx in mat.matrix_indexes(self.shape)]
