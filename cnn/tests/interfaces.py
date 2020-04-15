@@ -33,6 +33,17 @@ class AxiStreamMatrixDriver(AxiStreamDriver):
             mat.set_matrix_element(matrix, idx, self.get_element(idx).value.integer)
         return matrix
 
+    def _get_random_data(self):
+        matrix = mat.create_empty_matrix(self.shape)
+        for idx in mat.matrix_indexes(self.shape):
+            mat.set_matrix_element(matrix, idx, random.randint(0, self._max_value))
+        return matrix
+
+    @property
+    def _max_value(self):
+        width = len(self.get_element(self.first_idx))
+        return 2**width - 1
+
     def init_sink(self):
         self.bus.TVALID <= 0
         self.bus.TLAST <= 0
@@ -42,4 +53,6 @@ class AxiStreamMatrixDriver(AxiStreamDriver):
     def init_source(self):
         self.bus.TREADY <= 0
 
-
+    @property
+    def first_idx(self):
+        return tuple([0] * len(self.shape))
