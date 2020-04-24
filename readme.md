@@ -5,6 +5,8 @@ This repository is an excuse to learn abount *Convolutional Neural Networks* by 
 The main goal is to learn, and to make good use of the tools I enjoy the most for digital design. These include
 *nmigen*, *cocotb*, *yosys*, *icarus verilog*, *gtkwave*.
 
+The status of this project is "very" **WIP**!
+
 
 **To do (HDL):**
 
