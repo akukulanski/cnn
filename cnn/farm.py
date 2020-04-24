@@ -58,28 +58,29 @@ class Farm(Elaboratable):
         current_core_source = Signal(range(self.n_cores))
 
         # DUMMY input_b interface
-        comb += [self.input_b.ready.eq(self.input_a.accepted())]
+        # comb += [self.input_b.ready.eq(self.input_a.accepted())]
 
         for i, core in enumerate(self.cores):
             m.submodules['core_' + str(i)] = core
-            # comb += [core.coeff[n].eq(self.coeff[n]) for n in range(self.n_inputs)] # same coefficients for everybody
             comb += core.input_b.connect_data_ports(self.input_b) # same coefficients for everybody
             with m.If(current_core_sink == i):
-                comb += [core.input_a.valid.eq(self.input_a.valid),
-                         #core.input.data.eq(self.input.data),
-                         core.input_a.connect_data_ports(self.input_a),
-                         self.input_a.ready.eq(core.input_a.ready),
+                comb += [self.input_a.ready.eq(core.input_a.ready),
                          self.input_b.ready.eq(core.input_b.ready),
+                        ]
+                comb += [core.input_a.valid.eq(self.input_a.valid),
+                         core.input_b.valid.eq(self.input_b.valid),
+                         core.input_a.connect_data_ports(self.input_a),
                         ]
             with m.Else():
                 comb += [core.input_a.valid.eq(0),
                          core.input_b.valid.eq(0),
-                         # core.input_a.data.eq(0),
+                         core.input_a.connect_to_const(0),
                         ]
             with m.If(current_core_source == i):
                 comb += [self.output.valid.eq(core.output.valid),
                          self.output.data.eq(core.output.data),
-                         core.output.ready.eq(self.output.ready),
+                        ]
+                comb += [core.output.ready.eq(self.output.ready),
                         ]
             with m.Else():
                 comb += [core.output.ready.eq(0),
