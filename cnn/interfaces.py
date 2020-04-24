@@ -36,6 +36,9 @@ class AxiStreamMatrix(MetaStream):
         assert isinstance(other, AxiStreamMatrix)
         return [data_o.eq(data_i) for data_o, data_i in zip(self.data_ports, other.data_ports)]
 
+    def connect_to_const(self, const=0):
+        return [data_o.eq(const) for data_o in self.data_ports]
+
     @property
     def matrix(self):
         interface = self
