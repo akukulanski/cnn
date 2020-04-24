@@ -44,7 +44,7 @@ def init_test(dut):
 
 
 @cocotb.coroutine
-def check_data(dut, N, width, height, n_cores, burps_in=False, burps_out=False, dummy=0):
+def check_data(dut, N, width, height=5, n_cores=1, burps_in=False, burps_out=False, dummy=0):
 
     yield init_test(dut)
 
@@ -109,7 +109,7 @@ if running_cocotb:
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize("input_w, image_w, N, n_cores", [(8, 5, 3, 9),
-                                                             #(8, 5, 3, 1),
+                                                          (8, 5, 3, 1),
                                                             ])
 def test_convolution(input_w, image_w, N, n_cores):
     os.environ['coco_param_N'] = str(N)
@@ -120,5 +120,5 @@ def test_convolution(input_w, image_w, N, n_cores):
                        N=N,
                        n_cores=n_cores)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_convolution_i{input_w}_rowlength{image_w}_N{N}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_convolution_i{input_w}_rowlength{image_w}_N{N}_n{n_cores}.vcd')
     run(core, 'cnn.tests.test_convolution', ports=ports, vcd_file=vcd_file)
