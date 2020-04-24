@@ -1,14 +1,15 @@
 
 # CNN
 
-Convolutional Neural Network
+This repository is an excuse to learn abount *Convolutional Neural Networks* by implementing one in FPGA.
+The main goal is to learn, and to make good use of the tools I enjoy the most for digital design. These include
+*nmigen*, *cocotb*, *yosys*, *icarus verilog*, *gtkwave*.
 
-Implementing a CNN in a Lattice ICE40HX4K.
 
-To do:
+**To do (HDL):**
 
-* [x] MAC HDL
-* [x] MAC testbench
+* [x] MACC HDL
+* [x] MACC testbench
 * [x] Pipelined tree adder HDL
 * [x] Pipelined tree adder testbench
 * [x] Dot product HDL
@@ -21,27 +22,36 @@ To do:
 * [x] MatrixFeeder testbench
 * [x] AxiStreamMatrix interface
 * [x] Implement AxiStreamMatrix interface in existing cores
-* [ ] Convolution integration HDL
-* [ ] Convolution integration testbench
+* [x] Convolution integration HDL
+* [x] Convolution integration testbench
 * [ ] Paralell convolution HDL
 * [ ] Paralell convolution testbench
-* [ ] UART interface
-* [ ] PC: Python Uart Tx/Rx
+* [ ] MACC: facilitate integration of DSP primitives
 * [ ] Sigmoid? Softmax?
 * [ ] Convolution Layer NxN * M
 * [ ] CNN
-* [ ] Organize files, interfaces.
+* [ ] UART interface
+* [ ] PC: Python Uart Tx/Rx
 
 Single core synthesis + timing report:
-* [ ] MAC
+* [ ] MACC
 * [ ] Pipelined tree adder
 * [ ] Dot product
 * [ ] Dot product array (*farm*)
 * [ ] Row Fifo
 * [ ] Matrix Feeder
 * [ ] Convolution integration (3x3)
-* [ ] 
-* [ ] 
+...
+
+**To do (tools):**
+* [ ] Python package
+* [ ] Example of verilog generation
+* [ ] Dockerfile
+* [ ] CI
+
+**TO DO (others):**
+* [ ] Organize files, interfaces, etc. (this one will remain "undone" until a more stable design is reached)
+* [ ] Document (at least a little!)
 
 
 ### Requirements
@@ -52,8 +62,13 @@ Single core synthesis + timing report:
 * [icarus verilog v10.1](hhttps://github.com/steveicarus/iverilog) (reported problems with v10.2+)
 * [nmigen-cocotb](https://github.com/akukulanski/nmigen-cocotb)
 
+Aditional Python deps:
+* pytest
+* numpy
+* scipy
+
 ### Testing
 
 ```bash
-python3 -m pytest -vs cores/tests
+python3 -m pytest -vs cnn/
 ```
