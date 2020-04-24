@@ -1,0 +1,40 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Fri Apr 24 03:09:44 2020
+[*]
+[dumpfile] "./test_convolution_i8_rowlength5_N3_n9.vcd"
+[dumpfile_mtime] "Fri Apr 24 03:08:41 2020"
+[dumpfile_size] 113748
+[savefile] "./waveform_config/test_conv_n9.gtkw"s
+[timestart] 0
+[size] 1920 1016
+[pos] -1 -1
+*-17.393150 10340 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 211
+[signals_width] 198
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+top.clk
+@22
+top.coeff__TDATA_0_0[7:0]
+top.coeff__TDATA_0_1[7:0]
+top.coeff__TDATA_0_2[7:0]
+top.coeff__TDATA_1_0[7:0]
+top.coeff__TDATA_1_1[7:0]
+top.coeff__TDATA_1_2[7:0]
+top.coeff__TDATA_2_0[7:0]
+top.coeff__TDATA_2_1[7:0]
+top.coeff__TDATA_2_2[7:0]
+@28
+top.input__TVALID
+@29
+top.input__TREADY
+@22
+top.input__TDATA[7:0]
+top.output__TDATA[18:0]
+@28
+top.output__TVALID
+top.output__TREADY
+[pattern_trace] 1
+[pattern_trace] 0
