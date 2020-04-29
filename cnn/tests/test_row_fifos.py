@@ -1,7 +1,6 @@
 from nmigen_cocotb import run
 from cnn.row_fifos import RowFifos
-from cores_nmigen.test.interfaces import AxiStreamDriver
-from cnn.tests.interfaces import AxiStreamMatrixDriver
+from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
 from cnn.tests.utils import vcd_only_if_env
 import pytest
 import numpy as np

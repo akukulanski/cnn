@@ -1,9 +1,8 @@
 from nmigen_cocotb import run
 from cnn.matrix_interface import MatrixInterfaceBypass
 import cnn.matrix as mat
-from cnn.tests.utils import vcd_only_if_env
+from cnn.tests.utils import vcd_only_if_env, pack, unpack
 from cnn.tests.interfaces import AxiStreamMatrixDriver
-from cores_nmigen.test.utils import pack, unpack
 import pytest
 import random
 from math import ceil, log2
@@ -15,7 +14,6 @@ try:
     from cocotb.triggers import RisingEdge
     from cocotb.clock import Clock
     from cocotb.regression import TestFactory as TF
-    from .interfaces import *
 except:
     pass
 

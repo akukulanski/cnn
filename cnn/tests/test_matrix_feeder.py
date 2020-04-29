@@ -1,8 +1,7 @@
 from nmigen_cocotb import run
 from cnn.matrix_feeder import MatrixFeeder
-from cnn.tests.interfaces import AxiStreamMatrixDriver
+from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
 from cnn.tests.utils import vcd_only_if_env
-from cores_nmigen.test.interfaces import AxiStreamDriver
 import pytest
 import numpy as np
 import os

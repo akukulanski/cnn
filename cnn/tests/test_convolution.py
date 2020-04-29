@@ -1,9 +1,8 @@
 from nmigen_cocotb import run
 from cnn.convolution import Convolution
-from cnn.tests.interfaces import AxiStreamMatrixDriver
+from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
 from cnn.tests.utils import vcd_only_if_env, int_from_twos_comp
 import cnn.matrix as mat
-from cores_nmigen.test.interfaces import AxiStreamDriver
 import pytest
 import numpy as np
 import os

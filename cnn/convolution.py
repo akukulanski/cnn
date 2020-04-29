@@ -1,7 +1,5 @@
 from nmigen import *
-from cores_nmigen.interfaces import AxiStream
-from cores_nmigen.operations import _incr, _and, _or
-from cnn.interfaces import AxiStreamMatrix
+from cnn.interfaces import AxiStreamMatrix, AxiStream
 from cnn.matrix_feeder import MatrixFeeder
 from cnn.farm import Farm
 

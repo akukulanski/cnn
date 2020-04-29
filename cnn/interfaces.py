@@ -1,5 +1,43 @@
-from cores_nmigen.interfaces import MetaStream
+from nmigen import *
+from nmigen.hdl.rec import Direction
 import cnn.matrix as mat
+
+class MetaStream(Record):
+    DATA_FIELDS = []
+    def __init__(self, width, direction=None, name=None, fields=None):
+        self.width = width
+        if direction == 'sink':
+            layout = [('TVALID', 1, Direction.FANIN),
+                      ('TREADY', 1, Direction.FANOUT),
+                      ('TLAST', 1, Direction.FANIN)]
+            for d in self.DATA_FIELDS:
+                layout.append((d[0], d[1], Direction.FANIN))
+        elif direction == 'source':
+            layout = [('TVALID', 1, Direction.FANOUT),
+                      ('TREADY', 1, Direction.FANIN),
+                      ('TLAST', 1, Direction.FANOUT)]
+            for d in self.DATA_FIELDS:
+                layout.append((d[0], d[1], Direction.FANOUT))
+        else:
+            layout = [('TVALID', 1),
+                      ('TREADY', 1),
+                      ('TLAST', 1)]
+            for d in self.DATA_FIELDS:
+                layout.append((d[0], d[1]))
+        Record.__init__(self, layout, name=name, fields=fields)
+        self.valid = self.TVALID
+        self.ready = self.TREADY
+        self.last = self.TLAST
+        
+    def accepted(self):
+        return (self.valid == 1) & (self.ready == 1)
+
+
+class AxiStream(MetaStream):
+    def __init__(self, width, direction=None, name=None, fields=None):
+        self.DATA_FIELDS = [('TDATA', width)]
+        MetaStream.__init__(self, width, direction, name=name, fields=fields)
+        self.data = self.TDATA
 
 
 class AxiStreamMatrix(MetaStream):

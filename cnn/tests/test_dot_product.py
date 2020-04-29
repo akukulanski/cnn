@@ -2,8 +2,7 @@ from nmigen_cocotb import run
 from cnn.dot_product import DotProduct
 from cnn.tests.utils import int_from_twos_comp, vcd_only_if_env
 import cnn.matrix as mat
-from cnn.tests.interfaces import AxiStreamMatrixDriver
-from cores_nmigen.test.interfaces import AxiStreamDriver
+from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
 import pytest
 import random
 import numpy as np
@@ -14,7 +13,6 @@ try:
     from cocotb.triggers import RisingEdge
     from cocotb.clock import Clock
     from cocotb.regression import TestFactory as TF
-    from .interfaces import *
 except:
     pass
 

@@ -3,7 +3,82 @@ from cocotb.drivers import BusDriver
 from cocotb.triggers import RisingEdge
 import random
 import cnn.matrix as mat
-from cores_nmigen.test.interfaces import AxiStreamDriver
+
+
+class AxiStreamDriver(BusDriver):
+    
+    _signals =['TVALID', 'TREADY', 'TLAST', 'TDATA']
+
+    def __init__(self, entity, name, clock):
+        BusDriver.__init__(self, entity, name, clock)
+        self.clk = clock
+        self.buffer = []
+
+    def accepted(self):
+        return self.bus.TVALID.value.integer == 1 and self.bus.TREADY.value.integer == 1
+
+    def write(self, data):
+        self.bus.TDATA <= data
+
+    def read(self):
+        return self.bus.TDATA.value.integer
+
+    def read_last(self):
+        try:
+            return self.bus.TLAST.value.integer
+        except:
+            return 0
+
+    def _get_random_data(self):
+        return random.randint(0, 2**len(self.bus.TDATA)-1)
+
+    @cocotb.coroutine
+    def monitor(self):
+        while True:
+            if self.accepted():
+                self.buffer.append(self.read())
+            yield RisingEdge(self.clk)
+
+    @cocotb.coroutine
+    def send(self, data, burps=False):
+        data = list(data)
+        while len(data):
+            if burps:
+                valid = random.randint(0, 1)
+            else:
+                valid = 1
+            self.bus.TVALID <= valid
+            if valid:
+                self.write(data[0])
+                self.bus.TLAST <= 1 if (len(data) == 1) else 0
+            else:
+                self.write(self._get_random_data())
+                self.bus.TLAST <= 0
+                # self.bus.TLAST <= random.randint(0, 1)
+            yield RisingEdge(self.clk)
+            if self.accepted():
+                data.pop(0)
+        self.bus.TVALID <= 0
+        self.bus.TLAST <= 0
+
+    @cocotb.coroutine
+    def recv(self, n=-1, burps=False):
+        rd = []
+        while n:
+            if burps:
+                ready = random.randint(0, 1)
+            else:
+                ready = 1
+            self.bus.TREADY <= ready
+            yield RisingEdge(self.clk)
+            if self.accepted():
+                rd.append(self.read())
+                n = n - 1
+                if self.read_last():
+                    break
+        self.bus.TREADY <= 0
+        return rd
+
 
 class AxiStreamMatrixDriver(AxiStreamDriver):
 

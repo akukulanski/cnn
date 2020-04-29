@@ -1,9 +1,8 @@
 from nmigen import *
 from cnn.mac import MAC
 from cnn.utils import required_bits
-from cnn.interfaces import AxiStreamMatrix
+from cnn.interfaces import AxiStream, AxiStreamMatrix
 import cnn.matrix as mat
-from cores_nmigen.interfaces import AxiStream
 
 class DotProduct(Elaboratable):
     #

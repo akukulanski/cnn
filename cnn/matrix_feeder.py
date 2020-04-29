@@ -1,8 +1,7 @@
 from nmigen import *
-from cores_nmigen.interfaces import AxiStream
-from cores_nmigen.operations import _incr, _and, _or
+from cnn.operations import _incr
 from cnn.row_fifos import RowFifos
-from cnn.interfaces import AxiStreamMatrix
+from cnn.interfaces import AxiStream, AxiStreamMatrix
 
 class MatrixFeeder(Elaboratable):
     """ N fifos that work synchronized to provide NxN matrixes
