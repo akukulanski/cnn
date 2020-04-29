@@ -1,5 +1,5 @@
 from nmigen import *
-from cnn.utils import required_bits
+from cnn.utils.bits import required_bits
 from math import ceil, log2
 
 class PipelinedTreeAdderStage(Elaboratable):

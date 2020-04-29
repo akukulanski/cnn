@@ -1,7 +1,7 @@
 from nmigen import *
 from cnn.dot_product import DotProduct
 from cnn.interfaces import AxiStreamMatrix, AxiStream
-from cnn.operations import _incr
+from cnn.utils.operations import _incr
 
 
 class Farm(Elaboratable):

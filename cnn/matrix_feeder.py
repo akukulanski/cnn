@@ -1,5 +1,5 @@
 from nmigen import *
-from cnn.operations import _incr
+from cnn.utils.operations import _incr
 from cnn.row_fifos import RowFifos
 from cnn.interfaces import AxiStream, AxiStreamMatrix
 

@@ -1,7 +1,7 @@
 from nmigen import *
 from nmigen.lib.fifo import SyncFIFOBuffered
 from cnn.interfaces import AxiStreamMatrix, AxiStream
-from cnn.operations import _and
+from cnn.utils.operations import _and
 
 
 class RowFifos(Elaboratable):
