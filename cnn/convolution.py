@@ -1,5 +1,5 @@
 from nmigen import *
-from cnn.interfaces import AxiStreamMatrix, AxiStream
+from cnn.interfaces import MatrixStream, DataStream
 from cnn.matrix_feeder import MatrixFeeder
 from cnn.farm import Farm
 
@@ -15,9 +15,9 @@ class Convolution(Elaboratable):
         self.farm = Farm(input_w=input_w,
                          shape=(N, N),
                          n_cores=n_cores)
-        self.coeff = AxiStreamMatrix(width=input_w, shape=(N, N), direction='sink', name='coeff')
-        self.input = AxiStream(width=input_w, direction='sink', name='input')
-        self.output = AxiStream(width=self.output_w, direction='source', name='output')
+        self.coeff = MatrixStream(width=input_w, shape=(N, N), direction='sink', name='coeff')
+        self.input = DataStream(width=input_w, direction='sink', name='input')
+        self.output = DataStream(width=len(self.farm.output.data), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -27,11 +27,11 @@ class Convolution(Elaboratable):
 
     @property
     def input_w(self):
-        return self.input.width
+        return len(self.input.data)
 
     @property
     def output_w(self):
-        return self.farm.output.width
+        return len(self.output.data)
 
     @property
     def shape(self):

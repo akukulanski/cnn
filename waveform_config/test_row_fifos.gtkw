@@ -19,19 +19,19 @@ top.clk
 @200
 -INPUT
 @28
-top.input__TVALID
-top.input__TREADY
+top.input__valid
+top.input__ready
 @22
-top.input__TDATA[7:0]
+top.input__data[7:0]
 @200
 -OUTPUT
 @29
-top.output__TVALID
+top.output__valid
 @28
-top.output__TREADY
+top.output__ready
 @22
-top.output__TDATA_0[7:0]
-top.output__TDATA_1[7:0]
-top.output__TDATA_2[7:0]
+top.output__data_0[7:0]
+top.output__data_1[7:0]
+top.output__data_2[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

@@ -1,7 +1,7 @@
 from nmigen import *
 from cnn.utils.operations import _incr
 from cnn.row_fifos import RowFifos
-from cnn.interfaces import AxiStream, AxiStreamMatrix
+from cnn.interfaces import DataStream, MatrixStream
 
 class MatrixFeeder(Elaboratable):
     """ N fifos that work synchronized to provide NxN matrixes
@@ -13,8 +13,8 @@ class MatrixFeeder(Elaboratable):
     def __init__(self, input_w, row_length, N, invert=False):
         self.row_length = row_length
         self.invert = invert
-        self.input = AxiStream(width=input_w, direction='sink', name='input')
-        self.output = AxiStreamMatrix(width=input_w, shape=(N,N), direction='source', name='output')
+        self.input = DataStream(width=input_w, direction='sink', name='input')
+        self.output = MatrixStream(width=input_w, shape=(N,N), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -23,11 +23,11 @@ class MatrixFeeder(Elaboratable):
 
     @property
     def input_w(self):
-        return self.input.width
+        return len(self.input.data)
 
     @property
     def output_w(self):
-        return self.input_w
+        return (self.output.width)
 
     @property
     def shape(self):
@@ -82,8 +82,8 @@ class SubmatrixRegisters(Elaboratable):
 
     def __init__(self, input_w, N, invert=False):
         self.invert = invert
-        self.input = AxiStreamMatrix(width=input_w, shape=(N,), direction='sink', name='input')
-        self.output = AxiStreamMatrix(width=input_w, shape=(N,N), direction='source', name='output')
+        self.input = MatrixStream(width=input_w, shape=(N,), direction='sink', name='input')
+        self.output = MatrixStream(width=input_w, shape=(N,N), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]

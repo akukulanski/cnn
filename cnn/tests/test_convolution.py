@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.convolution import Convolution
-from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
+from cnn.tests.interfaces import MatrixStreamDriver, StreamDriver
 from cnn.tests.utils import vcd_only_if_env, int_from_twos_comp
 import cnn.matrix as mat
 import pytest
@@ -47,17 +47,17 @@ def check_data(dut, N, width, height=5, n_cores=1, burps_in=False, burps_out=Fal
 
     yield init_test(dut)
 
-    m_axis_coeff = AxiStreamMatrixDriver(dut, name='coeff_', clock=dut.clk, shape=(N,N))
-    m_axis = AxiStreamDriver(dut, name='input_', clock=dut.clk)
-    s_axis = AxiStreamDriver(dut, name='output_', clock=dut.clk)
-    input_w = len(dut.input__TDATA)
-    output_w = len(dut.output__TDATA)
+    m_axis_coeff = MatrixStreamDriver(dut, name='coeff_', clock=dut.clk, shape=(N,N))
+    m_axis = StreamDriver(dut, name='input_', clock=dut.clk)
+    s_axis = StreamDriver(dut, name='output_', clock=dut.clk)
+    input_w = len(dut.input__data)
+    output_w = len(dut.output__data)
     
-    m_axis.bus.TVALID <= 0
-    m_axis.bus.TLAST <= 0
-    m_axis.bus.TDATA <= 0
+    m_axis.bus.valid <= 0
+    m_axis.bus.last <= 0
+    m_axis.bus.data <= 0
     m_axis_coeff.init_sink()
-    s_axis.bus.TREADY <= 0
+    s_axis.bus.ready <= 0
     yield RisingEdge(dut.clk)
 
     image_size = width * height

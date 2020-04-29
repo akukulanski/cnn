@@ -1,6 +1,6 @@
 from nmigen import *
 from nmigen.lib.fifo import SyncFIFOBuffered
-from cnn.interfaces import AxiStreamMatrix, AxiStream
+from cnn.interfaces import MatrixStream, DataStream
 from cnn.utils.operations import _and
 
 
@@ -12,8 +12,8 @@ class RowFifos(Elaboratable):
     def __init__(self, input_w, row_length, N, invert=False):
         self.row_length = row_length
         self.invert = invert
-        self.input = AxiStream(width=input_w, direction='sink', name='input')
-        self.output = AxiStreamMatrix(width=input_w, shape=(N,), direction='source', name='output')
+        self.input = DataStream(width=input_w, direction='sink', name='input')
+        self.output = MatrixStream(width=input_w, shape=(N,), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -22,7 +22,7 @@ class RowFifos(Elaboratable):
 
     @property
     def input_w(self):
-        return self.input.width
+        return len(self.input.data)
 
     @property
     def output_w(self):

@@ -2,7 +2,7 @@ from nmigen_cocotb import run
 from cnn.dot_product import DotProduct
 from cnn.tests.utils import int_from_twos_comp, vcd_only_if_env
 import cnn.matrix as mat
-from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
+from cnn.tests.interfaces import MatrixStreamDriver, StreamDriver
 import pytest
 import random
 import numpy as np
@@ -53,16 +53,16 @@ def check_data(dut, shape, burps_in, burps_out, dummy=0):
     test_size = 20
     yield init_test(dut)
 
-    m_axis_a = AxiStreamMatrixDriver(dut, name='input_a_', clock=dut.clk, shape=shape)
-    m_axis_b = AxiStreamMatrixDriver(dut, name='input_b_', clock=dut.clk, shape=shape)
-    s_axis = AxiStreamDriver(dut, name='output_', clock=dut.clk)
+    m_axis_a = MatrixStreamDriver(dut, name='input_a_', clock=dut.clk, shape=shape)
+    m_axis_b = MatrixStreamDriver(dut, name='input_b_', clock=dut.clk, shape=shape)
+    s_axis = StreamDriver(dut, name='output_', clock=dut.clk)
     m_axis_a.init_sink()
     m_axis_b.init_sink()
-    s_axis.bus.TREADY <= 0 # s_axis.init_source()
+    s_axis.bus.ready <= 0 # s_axis.init_source()
     yield RisingEdge(dut.clk)
 
     input_w = len(m_axis_a.get_element(m_axis_a.first_idx))
-    output_w = len(dut.output__TDATA)
+    output_w = len(dut.output__data)
     
     wr_a = [m_axis_a._get_random_data() for _ in range(test_size)]
     wr_b = incremental_matrix(shape, test_size, 2**input_w - 1)

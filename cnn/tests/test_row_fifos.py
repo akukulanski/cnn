@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.row_fifos import RowFifos
-from cnn.tests.interfaces import AxiStreamMatrixDriver, AxiStreamDriver
+from cnn.tests.interfaces import MatrixStreamDriver, StreamDriver
 from cnn.tests.utils import vcd_only_if_env
 import pytest
 import numpy as np
@@ -54,13 +54,13 @@ def check_data(dut, N, width, height, invert=False, burps_in=False, burps_out=Fa
 
     yield init_test(dut)
 
-    m_axis = AxiStreamDriver(dut, name='input_', clock=dut.clk)
-    s_axis = AxiStreamMatrixDriver(dut, name='output_', clock=dut.clk, shape=(N,))
-    input_w = len(dut.input__TDATA)
+    m_axis = StreamDriver(dut, name='input_', clock=dut.clk)
+    s_axis = MatrixStreamDriver(dut, name='output_', clock=dut.clk, shape=(N,))
+    input_w = len(dut.input__data)
     output_w = len(s_axis.get_element(s_axis.first_idx))
-    m_axis.bus.TVALID <= 0
-    m_axis.bus.TLAST <= 0
-    m_axis.bus.TDATA <= 0
+    m_axis.bus.valid <= 0
+    m_axis.bus.last <= 0
+    m_axis.bus.data <= 0
     s_axis.init_source()
     yield RisingEdge(dut.clk)
 

@@ -5,9 +5,9 @@ import random
 import cnn.matrix as mat
 
 
-class AxiStreamDriver(BusDriver):
+class StreamDriver(BusDriver):
     
-    _signals =['TVALID', 'TREADY', 'TLAST', 'TDATA']
+    _signals =['valid', 'ready', 'last', 'data']
 
     def __init__(self, entity, name, clock):
         BusDriver.__init__(self, entity, name, clock)
@@ -15,22 +15,22 @@ class AxiStreamDriver(BusDriver):
         self.buffer = []
 
     def accepted(self):
-        return self.bus.TVALID.value.integer == 1 and self.bus.TREADY.value.integer == 1
+        return self.bus.valid.value.integer == 1 and self.bus.ready.value.integer == 1
 
     def write(self, data):
-        self.bus.TDATA <= data
+        self.bus.data <= data
 
     def read(self):
-        return self.bus.TDATA.value.integer
+        return self.bus.data.value.integer
 
     def read_last(self):
         try:
-            return self.bus.TLAST.value.integer
+            return self.bus.last.value.integer
         except:
             return 0
 
     def _get_random_data(self):
-        return random.randint(0, 2**len(self.bus.TDATA)-1)
+        return random.randint(0, 2**len(self.bus.data)-1)
 
     @cocotb.coroutine
     def monitor(self):
@@ -47,19 +47,19 @@ class AxiStreamDriver(BusDriver):
                 valid = random.randint(0, 1)
             else:
                 valid = 1
-            self.bus.TVALID <= valid
+            self.bus.valid <= valid
             if valid:
                 self.write(data[0])
-                self.bus.TLAST <= 1 if (len(data) == 1) else 0
+                self.bus.last <= 1 if (len(data) == 1) else 0
             else:
                 self.write(self._get_random_data())
-                self.bus.TLAST <= 0
-                # self.bus.TLAST <= random.randint(0, 1)
+                self.bus.last <= 0
+                # self.bus.last <= random.randint(0, 1)
             yield RisingEdge(self.clk)
             if self.accepted():
                 data.pop(0)
-        self.bus.TVALID <= 0
-        self.bus.TLAST <= 0
+        self.bus.valid <= 0
+        self.bus.last <= 0
 
     @cocotb.coroutine
     def recv(self, n=-1, burps=False):
@@ -69,20 +69,20 @@ class AxiStreamDriver(BusDriver):
                 ready = random.randint(0, 1)
             else:
                 ready = 1
-            self.bus.TREADY <= ready
+            self.bus.ready <= ready
             yield RisingEdge(self.clk)
             if self.accepted():
                 rd.append(self.read())
                 n = n - 1
                 if self.read_last():
                     break
-        self.bus.TREADY <= 0
+        self.bus.ready <= 0
         return rd
 
 
-class AxiStreamMatrixDriver(AxiStreamDriver):
+class MatrixStreamDriver(StreamDriver):
 
-    _signals =['TVALID', 'TREADY', 'TLAST']
+    _signals =['valid', 'ready', 'last']
 
     def __init__(self, entity, name, clock, shape):
         self.shape = shape
@@ -93,7 +93,7 @@ class AxiStreamMatrixDriver(AxiStreamDriver):
         self.buffer = []
 
     def get_element_name(self, indexes):
-        return 'TDATA_' + '_'.join([str(i) for i in indexes])
+        return 'data_' + '_'.join([str(i) for i in indexes])
 
     def get_element(self, indexes):
         return getattr(self.bus, self.get_element_name(indexes))
@@ -120,13 +120,13 @@ class AxiStreamMatrixDriver(AxiStreamDriver):
         return 2**width - 1
 
     def init_sink(self):
-        self.bus.TVALID <= 0
-        self.bus.TLAST <= 0
+        self.bus.valid <= 0
+        self.bus.last <= 0
         for idx in mat.matrix_indexes(self.shape):
             self.get_element(idx) <= 0
 
     def init_source(self):
-        self.bus.TREADY <= 0
+        self.bus.ready <= 0
 
     @property
     def first_idx(self):

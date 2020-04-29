@@ -62,7 +62,7 @@ vcd_only_if_env = lambda filename, env='WAVEFORM': filename if env in os.environ
 
 """
 example usage:
-    slice(dut.input__TDATA, (8, 16))
-    # returns input__TDATA[8:16]
+    slice(dut.input__data, (8, 16))
+    # returns input__data[8:16]
 """
 slice_signal = lambda value, index: (value >> index[0]) & (2 ** (index[1] - index[0]) - 1)

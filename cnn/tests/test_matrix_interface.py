@@ -2,7 +2,7 @@ from nmigen_cocotb import run
 from cnn.matrix_interface import MatrixInterfaceBypass
 import cnn.matrix as mat
 from cnn.tests.utils import vcd_only_if_env, pack, unpack
-from cnn.tests.interfaces import AxiStreamMatrixDriver
+from cnn.tests.interfaces import MatrixStreamDriver
 import pytest
 import random
 from math import ceil, log2
@@ -47,8 +47,8 @@ def check_data(dut, shape, dummy=0):
     test_size = 20
     yield init_test(dut)
 
-    m_axis = AxiStreamMatrixDriver(dut, name='input_', clock=dut.clk, shape=shape)
-    s_axis = AxiStreamMatrixDriver(dut, name='output_', clock=dut.clk, shape=shape)
+    m_axis = MatrixStreamDriver(dut, name='input_', clock=dut.clk, shape=shape)
+    s_axis = MatrixStreamDriver(dut, name='output_', clock=dut.clk, shape=shape)
     m_axis.init_sink()
     s_axis.init_source()
 

@@ -1,6 +1,6 @@
 from nmigen import *
 from cnn.dot_product import DotProduct
-from cnn.interfaces import AxiStreamMatrix, AxiStream
+from cnn.interfaces import MatrixStream, DataStream
 from cnn.utils.operations import _incr
 
 
@@ -17,9 +17,9 @@ class Farm(Elaboratable):
     #
     def __init__(self, input_w, shape, n_cores):
         self.cores = [DotProduct(input_w, shape) for _ in range(n_cores)]
-        self.input_a = AxiStreamMatrix(width=input_w, shape=shape, direction='sink', name='input_a')
-        self.input_b = AxiStreamMatrix(width=input_w, shape=shape, direction='sink', name='input_b')
-        self.output = AxiStream(self.output_w, direction='source', name='output')
+        self.input_a = MatrixStream(width=input_w, shape=shape, direction='sink', name='input_a')
+        self.input_b = MatrixStream(width=input_w, shape=shape, direction='sink', name='input_b')
+        self.output = DataStream(self.output_w, direction='source', name='output')
 
     def get_ports(self):
         ports = []
