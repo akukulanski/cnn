@@ -10,48 +10,38 @@ The status of this project is "very" **WIP**!
 
 **To do (HDL):**
 
-* [x] MACC HDL
-* [x] MACC testbench
-* [x] Pipelined tree adder HDL
-* [x] Pipelined tree adder testbench
-* [x] Dot product HDL
-* [x] Dot product testbench
-* [x] Dot product array (*farm*) HDL
-* [x] Dot product array (*farm*) testbench
-* [x] Row Fifo HDL
-* [x] Row Fifo testbench
-* [x] MatrixFeeder HDL.
-* [x] MatrixFeeder testbench
-* [x] AxiStreamMatrix interface
-* [x] Implement AxiStreamMatrix interface in existing cores
-* [x] Convolution integration HDL
-* [x] Convolution integration testbench
-* [ ] Paralell convolution HDL
-* [ ] Paralell convolution testbench
-* [ ] MACC: facilitate integration of DSP primitives
-* [ ] Sigmoid? Softmax?
-* [ ] Convolution Layer NxN * M
-* [ ] CNN
-* [ ] UART interface
+* [x] MACC: HDL + testbench (should be reimplemented to infer arch dependent dsp slices)
+* [x] Pipelined tree adder: HDL + testbench
+* [x] Dot product: HDL + testbench
+* [x] Dot product array (*farm*): HDL + testbench
+* [x] Row Fifo: HDL + testbench
+* [x] MatrixFeeder: HDL + testbench
+* [x] MatrixStream interface
+* [x] Implement MatrixStream interface in existing cores
+* [x] Convolution: HDL + testbench
+* [ ] Convolution Layer
+* [ ] StreamWrapper for logic with clken
+* [ ] Pooling: HDL + testbench
+* [ ] Sigmoid / Softmax / ReLU
+* [ ] Configurable MACC facilitate integration of DSP primitives
+* [ ] MLP node
+* [ ] MLP layer
+* [ ] CNN (Customizable integration of the cores above)
+* [ ] UART interface to be able to run some tests in hw with a low-cost fpga (only as a proof of concept)
 * [ ] PC: Python Uart Tx/Rx
+* [ ] python2fpga
 
-Single core synthesis + timing report:
-* [ ] MACC
-* [ ] Pipelined tree adder
-* [ ] Dot product
-* [ ] Dot product array (*farm*)
-* [ ] Row Fifo
-* [ ] Matrix Feeder
-* [ ] Convolution integration (3x3)
-...
+**To do (enhacements):**
+* [ ] Arbitrer to share dps resources
+* [ ] Paralell convolution by splitting input image
 
 **To do (tools):**
+* [ ] Dockerfile (test!)
+* [ ] CI
 * [ ] Python package
 * [ ] Example of verilog generation
-* [ ] Dockerfile
-* [ ] CI
 
-**TO DO (others):**
+**To do (others):**
 * [ ] Organize files, interfaces, etc. (this one will remain "undone" until a more stable design is reached)
 * [ ] Document (at least a little!)
 
@@ -74,3 +64,9 @@ Aditional Python deps:
 ```bash
 python3 -m pytest -vs cnn/
 ```
+
+### Intro to nn
+
+* https://ujjwalkarn.me/2016/08/09/quick-intro-neural-networks/
+* https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/
+* https://medium.com/technologymadeeasy/the-best-explanation-of-convolutional-neural-networks-on-the-internet-fbb8b1ad5df8
