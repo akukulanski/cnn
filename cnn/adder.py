@@ -1,101 +1,108 @@
 from nmigen import *
-from cnn.utils.bits import required_bits
-from math import ceil, log2
 
-class PipelinedTreeAdderStage(Elaboratable):
-    def __init__(self, input_w, output_w, num_inputs, n):
-        self.input_w = input_w
-        self.output_w = output_w
-        self.num_inputs = ceil(num_inputs / 2) * 2
-        self.num_outputs = ceil(self.num_inputs / 2)
-        self.inputs = [Signal(signed(self.input_w), name=n+'_input_'+str(i)) for i in range(self.num_inputs)]
-        self.outputs = [Signal(signed(self.output_w), name=n+'_output_'+str(i)) for i in range(self.num_outputs)]
+
+class TreeAdderStage(Elaboratable):
+
+    def __init__(self, input_w, num_inputs, n, reg_in, reg_out):
+        if num_inputs % 2 != 0:
+            num_inputs += 1
+        self.inputs = [Signal(signed(input_w), name=n+'_input_'+str(i)) for i in range(num_inputs)]
+        self.outputs = [Signal(signed(input_w + 1), name=n+'_output_'+str(i)) for i in range(int(num_inputs / 2))]
         self.clken = Signal()
-        self.valid_i = Signal()
-        self.valid_o = Signal()
+        self.reg_in = reg_in
+        self.reg_out = reg_out
 
     def get_ports(self):
-        ports = []
-        ports += [self.clken, self.valid_i, self.valid_o]
-        ports += [p for p in self.inputs]
-        ports += [p for p in self.outputs]
+        ports = [self.clken] + self.inputs + self.outputs
         return ports
+
+    @property
+    def input_w(self):
+        return len(self.inputs[0])
+
+    @property
+    def output_w(self):
+        return len(self.outputs[0])
+
+    @property
+    def latency(self):
+        return sum([int(b) for b in (self.reg_in, True, self.reg_out)])
 
     def elaborate(self, platform):
         m = Module()
         sync = m.d.sync
         comb = m.d.comb
         
+        i_dom = sync if self.reg_in else comb
+        o_dom = sync if self.reg_out else comb
+
+        input_r = [Signal(signed(self.input_w)) for _ in self.inputs]
+        sum_r = [Signal(signed(self.output_w)) for _ in self.outputs]
+
         with m.If(self.clken):
-            sync += self.valid_o.eq(self.valid_i)
-            for i, output in enumerate(self.outputs):
-                sync += output.eq(self.inputs[int(2*i)] + self.inputs[int(2*i + 1)])
-        with m.Else():
-            sync += self.valid_o.eq(0)
-            for i, output in enumerate(self.outputs):
-                sync += output.eq(0)
+            i_dom += [ir.eq(i) for ir, i in zip(input_r, self.inputs)]
+            sync += [s.eq(input_r[int(2*i)] + input_r[int(2*i + 1)]) for i, s in enumerate(sum_r)]
+            o_dom += [o.eq(sr) for o, sr in zip(self.outputs, sum_r)]
 
         return m
 
 
-class PipelinedTreeAdder(Elaboratable):
-    def __init__(self, input_w, stages):
-        self.input_w = input_w
+class TreeAdder(Elaboratable):
+
+    def __init__(self, input_w, stages, *args, **kwargs):
         self.stages = stages
-        self.output_w = self._required_output_bits(stages - 1)
-        self.num_inputs = 2**(stages)
-        self.inputs = [Signal(signed(self.input_w), name='input_' + str(i)) for i in range(self.num_inputs)]
-        self.output = Signal(signed(self.output_w))
+        self.inputs = [Signal(signed(input_w), name='input_' + str(i)) for i in range(2**(stages))]
+        self.output = Signal(signed(input_w + stages))
         self.clken = Signal()
-        self.valid_i = Signal()
-        self.valid_o = Signal()
+        self.args = args
+        self.kwargs = kwargs
+        self.tree_adder_stages = [TreeAdderStage(self.input_w+i,
+                                            2**(self.stages-i),
+                                            n='S'+str(i),
+                                            *self.args,
+                                            **self.kwargs
+                                            ) for i in range(self.stages)]
 
     def get_ports(self):
-        ports = []
-        ports += [self.clken, self.valid_i, self.valid_o]
-        ports += [p for p in self.inputs]
-        ports += [self.output]
+        ports = [self.clken] + self.inputs + [self.output]
         return ports
 
-    def _required_output_bits(self, stage):
-        assert stage in range(self.stages)
-        worst_value = -2**(self.input_w - 1)
-        width_in = self.input_w
-        for s in range(self.stages):
-            worst_value *= 2
-            if s == stage:
-                return required_bits(worst_value)
+    @property
+    def input_w(self):
+        return len(self.inputs[0])
+
+    @property
+    def output_w(self):
+        return len(self.output)
+
+    @property
+    def num_inputs(self):
+        return len(self.inputs)
+
+    @property
+    def latency(self):
+        return sum(stage.latency for stage in self.tree_adder_stages)
 
     def elaborate(self, platform):
         m = Module()
-        sync = m.d.sync
         comb = m.d.comb
-        
-        tree_adder_stages = []
 
-        input_w = self.input_w
-        for stage_num in range(self.stages):
-            output_w = self._required_output_bits(stage_num)
-            stage = PipelinedTreeAdderStage(input_w, output_w, 2**(self.stages - stage_num), n='S'+str(stage_num))
-            m.submodules['tree_adder_' + str(stage_num)] = stage
-            tree_adder_stages.append(stage)
-            x = tree_adder_stages[stage_num]
-            input_w = output_w
-            comb += stage.clken.eq(self.clken)
+        tree_adder_stages = self.tree_adder_stages
 
-        comb += tree_adder_stages[0].valid_i.eq(self.valid_i)
-        for i in range(len(tree_adder_stages[0].inputs)):
-            comb += tree_adder_stages[0].inputs[i].eq(self.inputs[i])
+        for i, stage in enumerate(tree_adder_stages):
+            m.submodules['tree_adder_' + str(i)] = stage
 
-        for stage_num in range(1, self.stages):
-            first_stage = tree_adder_stages[stage_num-1]
-            second_stage = tree_adder_stages[stage_num]
-            comb += second_stage.valid_i.eq(first_stage.valid_o)
-            for i in range(first_stage.num_outputs):
-                comb += second_stage.inputs[i].eq(first_stage.outputs[i])
+        # Clock enable to all stages
+        comb += [stage.clken.eq(self.clken) for stage in tree_adder_stages]
 
-        comb += [self.valid_o.eq(tree_adder_stages[self.stages-1].valid_o),
-                 self.output.eq(tree_adder_stages[self.stages-1].outputs[0]),
-                ]
+        # Connect input to first stage
+        comb += [tree_adder_stages[0].inputs[i].eq(self.inputs[i]) for i in range(self.num_inputs)]
+
+        # Pipelined adder stages
+        for prv, nxt in zip(tree_adder_stages[0:-1], tree_adder_stages[1:]):
+            comb += [nxt_i.eq(prv_o) for prv_o, nxt_i in zip(prv.outputs, nxt.inputs)]
+
+        # Last stage to output
+        comb += self.output.eq(tree_adder_stages[-1].outputs[0])
 
         return m

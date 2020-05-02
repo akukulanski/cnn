@@ -58,6 +58,12 @@ def unpack(buffer, elements, element_width):
             b = b >> element_width
 
 
+def subfinder(mylist, pattern):
+    sub = ','.join([str(x) for x in pattern]) # lo se, esto es horrible
+    big = ','.join([str(x) for x in mylist])
+    return sub in big 
+
+
 vcd_only_if_env = lambda filename, env='WAVEFORM': filename if env in os.environ else None
 
 """
