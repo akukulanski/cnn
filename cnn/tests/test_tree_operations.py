@@ -1,5 +1,5 @@
 from nmigen_cocotb import run
-from cnn.adder import TreeAdder
+from cnn.tree_operations import TreeAdder
 from cnn.tests.utils import int_from_twos_comp, subfinder, vcd_only_if_env
 import pytest
 import random
@@ -103,10 +103,10 @@ tf_test_data.add_option('dummy', [0] * 5)
 tf_test_data.generate_tests()
 
 @pytest.mark.parametrize("input_w, stages", [(8, 4), (8, 2), (8, 1),])
-def test_adder(input_w, stages):
+def test_main(input_w, stages):
     core = TreeAdder(input_w=input_w,
-                     stages=stages,
+                     n_stages=stages,
                      reg_in=True, reg_out=True)
     ports = core.get_ports()
     vcd_file = vcd_only_if_env(f'./test_adder_i{input_w}_s{stages}.vcd')
-    run(core, 'cnn.tests.test_adder', ports=ports, vcd_file=vcd_file)
+    run(core, 'cnn.tests.test_tree_operations', ports=ports, vcd_file=vcd_file)
