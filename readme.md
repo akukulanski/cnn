@@ -19,6 +19,7 @@ The status of this project is "very" **WIP**!
 * [x] MatrixStream interface
 * [x] Implement MatrixStream interface in existing cores
 * [x] Convolution: HDL + testbench
+* [x] Resizer (Padder & Cropper): HDL + testbench
 * [ ] Convolution Layer
 * [ ] StreamWrapper for logic with clken
 * [ ] Pooling: HDL + testbench
