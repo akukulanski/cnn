@@ -1,5 +1,5 @@
 from nmigen_cocotb import run
-from cnn.resize import Padder, Cropper, Resizer
+from cnn.resize import Resizer
 from cnn.tests.interfaces import StreamDriver
 from cnn.tests.utils import vcd_only_if_env
 import pytest

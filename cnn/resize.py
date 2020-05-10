@@ -28,7 +28,7 @@ def position_belongs_to_img(row, col, shape):
                1, 0)
 
 
-class Padder(Elaboratable):
+class Resizer(Elaboratable):
     """ 
     data_w          pixel width
     input_shape     input image shape (height, width)
@@ -37,10 +37,15 @@ class Padder(Elaboratable):
     """
 
     def __init__(self, data_w, input_shape, output_shape, fill_value=0):
-        assert input_shape[0] <= output_shape[0], (
-            f'input height > output height ({input_shape[0]} > {output_shape[0]})')
-        assert input_shape[1] <= output_shape[1], (
-            f'input width > output width ({input_shape[1]} > {output_shape[1]})')
+        if input_shape[0] == output_shape[0] and input_shape[1] == output_shape[1]:
+            # no operation, just last generation
+            setattr(self, 'elaborate', self.elaborate_nop)
+        elif input_shape[0] <= output_shape[0] and input_shape[1] <= output_shape[1]:
+            setattr(self, 'elaborate', self.elaborate_padder)
+        elif input_shape[0] >= output_shape[0] and input_shape[1] >= output_shape[1]:
+            setattr(self, 'elaborate', self.elaborate_cropper)
+        else:
+            raise RuntimeError('Output image must be cant be bigger in one dimension and smaller in the other one')
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.fill_value = fill_value
@@ -52,7 +57,7 @@ class Padder(Elaboratable):
         ports += [self.output[f] for f in self.output.fields]
         return ports
 
-    def elaborate(self, platform):
+    def elaborate_padder(self, platform):
         m = Module()
         sync = m.d.sync
         comb = m.d.comb
@@ -74,30 +79,7 @@ class Padder(Elaboratable):
 
         return m
 
-
-class Cropper(Elaboratable):
-    """ 
-    data_w          pixel width
-    input_shape     input image shape (height, width)
-    output_shape    output image shape (height, width)
-    """
-
-    def __init__(self, data_w, input_shape, output_shape):
-        assert input_shape[0] >= output_shape[0], (
-            f'input height < output height ({input_shape[0]} < {output_shape[0]})')
-        assert input_shape[1] >= output_shape[1], (
-            f'input width < output width ({input_shape[1]} < {output_shape[1]})')
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-        self.input = DataStream(width=data_w, direction='sink', name='input')
-        self.output = DataStream(width=data_w, direction='source', name='output')
-
-    def get_ports(self):
-        ports = [self.input[f] for f in self.input.fields]
-        ports += [self.output[f] for f in self.output.fields]
-        return ports
-
-    def elaborate(self, platform):
+    def elaborate_cropper(self, platform):
         m = Module()
         sync = m.d.sync
         comb = m.d.comb
@@ -119,10 +101,18 @@ class Cropper(Elaboratable):
 
         return m
 
-def Resizer(data_w, input_shape, output_shape, fill_value=0):
-    if input_shape[0] <= output_shape[0] and input_shape[1] <= output_shape[1]:
-        return Padder(data_w, input_shape, output_shape, fill_value)
-    elif input_shape[0] >= output_shape[0] and input_shape[1] >= output_shape[1]:
-        return Cropper(data_w, input_shape, output_shape)
-    else:
-        raise RuntimeError('Output image must be cant be bigger in one dimension and smaller in the other one')
+    def elaborate_nop(self, platform):
+        m = Module()
+        sync = m.d.sync
+        comb = m.d.comb
+
+        row, col = img_position_counter(m, sync, self.output, self.output_shape)
+
+        comb += self.output.last.eq(is_last(row, col, self.output_shape))
+
+        comb += [self.output.valid.eq(self.input.valid),
+                 self.output.data.eq(self.input.data),
+                 self.input.ready.eq(self.output.ready),
+                ]
+
+        return m
