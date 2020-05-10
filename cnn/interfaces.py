@@ -2,26 +2,26 @@ from nmigen import *
 from nmigen.hdl.rec import Direction
 import cnn.matrix as mat
 
-class GenericStream(Record):
+class Dataport(Record):
+
     DATA_FIELDS = None
-    def __init__(self, direction=None, name=None, fields=None, last=True):
-        layout = self.get_layout(direction, last)
+
+    def __init__(self, direction=None, name=None, fields=None):
+        layout = self.get_layout(direction)
         Record.__init__(self, layout, name=name, fields=fields)
-        self._total_width = sum([d[1] for d in self.DATA_FIELDS])
-        self._flat_data = Cat(*[getattr(self, d[0]) for d in self.DATA_FIELDS])
 
-    def get_layout(self, direction, last):
-        if last:
-            self.DATA_FIELDS += [('last', 1)]
+    @property
+    def total_width(self):
+        return sum([width for name, width in self.DATA_FIELDS])
 
+    def flatten(self):
+        return Cat(*[getattr(self, data) for data, width in self.DATA_FIELDS])
+
+    def get_layout(self, direction):
         if direction == 'sink':
-            layout = [('valid', 1, Direction.FANIN),
-                      ('ready', 1, Direction.FANOUT)]
-            layout += [(d[0], d[1], Direction.FANIN) for d in self.DATA_FIELDS]
+            layout = [(name, width, Direction.FANIN) for name, width in self.DATA_FIELDS]
         elif direction == 'source':
-            layout = [('valid', 1, Direction.FANOUT),
-                      ('ready', 1, Direction.FANIN)]
-            layout += [(d[0], d[1], Direction.FANOUT) for d in self.DATA_FIELDS]
+            layout = [(name, width, Direction.FANOUT) for name, width in self.DATA_FIELDS]
         else:
             raise ValueError(f'direction should be sink or source.')
         return layout
@@ -29,15 +29,38 @@ class GenericStream(Record):
     def eq_from_flat(self, flat_data):
         ops = []
         start_bit = 0
-        assert len(flat_data) == self._total_width
-        for df in self.DATA_FIELDS:
-            data, width = df[0], df[1]
-            ops += [getattr(self, data).eq(flat_data[start_bit:start_bit+width])]
+        assert len(flat_data) == self.total_width
+        for name, width in self.DATA_FIELDS:
+            ops += [getattr(self, name).eq(flat_data[start_bit:start_bit+width])]
             start_bit += width
         return ops
 
+    def data_ports(self):
+        return [getattr(self, name) for name, _ in self.DATA_FIELDS]
+
+
+
+class GenericStream(Dataport):
+
+    def get_layout(self, direction):
+        layout = Dataport.get_layout(self, direction)
+        if direction == 'sink':
+            layout += [('valid', 1, Direction.FANIN),
+                       ('last', 1, Direction.FANIN),
+                       ('ready', 1, Direction.FANOUT),]
+        elif direction == 'source':
+            layout += [('valid', 1, Direction.FANOUT),
+                       ('last', 1, Direction.FANOUT),
+                       ('ready', 1, Direction.FANIN)]
+        else:
+            raise ValueError(f'direction should be sink or source.')
+        return layout
+
     def accepted(self):
         return (self.valid == 1) & (self.ready == 1)
+
+    def is_last(self):
+        return (self.accepted() == 1) & (self.last == 1)
 
 
 class DataStream(GenericStream):

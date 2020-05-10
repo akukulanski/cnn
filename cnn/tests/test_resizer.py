@@ -20,16 +20,6 @@ def create_clock(dut):
     cocotb.fork(Clock(dut.clk, 10, 'ns').start())
 
 
-def zero_init_master(driver):
-    driver.bus.valid <= 0
-    driver.bus.last <= 0
-    driver.bus.data <= 0
-
-
-def zero_init_slave(driver):
-    driver.bus.ready <= 0
-
-
 def get_expected_data(wr_data, input_shape, output_shape, fill_value):
     if (input_shape[0] <= output_shape[0]) and (input_shape[1] <= output_shape[1]):
         zeros = [fill_value for _ in range(output_shape[0] * output_shape[1])]
@@ -58,8 +48,8 @@ def check_data(dut, input_shape, output_shape, fill_value=0, burps_in=False, bur
     data_w = len(dut.input__data)
 
     create_clock(dut)
-    zero_init_master(m_axis)
-    zero_init_slave(s_axis)
+    m_axis.init_master()
+    s_axis.init_slave()
     yield reset(dut)
 
     input_img_h, input_img_w = input_shape

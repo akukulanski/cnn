@@ -56,9 +56,9 @@ def check_data(dut, shape, burps_in, burps_out, dummy=0):
     m_axis_a = MatrixStreamDriver(dut, name='input_a_', clock=dut.clk, shape=shape)
     m_axis_b = MatrixStreamDriver(dut, name='input_b_', clock=dut.clk, shape=shape)
     s_axis = StreamDriver(dut, name='output_', clock=dut.clk)
-    m_axis_a.init_sink()
-    m_axis_b.init_sink()
-    s_axis.bus.ready <= 0 # s_axis.init_source()
+    m_axis_a.init_master()
+    m_axis_b.init_master()
+    s_axis.init_slave()
     yield RisingEdge(dut.clk)
 
     input_w = len(m_axis_a.get_element(m_axis_a.first_idx))

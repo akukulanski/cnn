@@ -53,11 +53,9 @@ def check_data(dut, N, width, height=5, n_cores=1, burps_in=False, burps_out=Fal
     input_w = len(dut.input__data)
     output_w = len(dut.output__data)
     
-    m_axis.bus.valid <= 0
-    m_axis.bus.last <= 0
-    m_axis.bus.data <= 0
-    m_axis_coeff.init_sink()
-    s_axis.bus.ready <= 0
+    m_axis.init_master()
+    m_axis_coeff.init_master()
+    s_axis.init_slave()
     yield RisingEdge(dut.clk)
 
     image_size = width * height

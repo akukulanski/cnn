@@ -5,11 +5,10 @@ import random
 import cnn.matrix as mat
 
 
-class StreamDriver(BusDriver):
-    
-    _signals =['valid', 'ready', 'last', 'data']
+class MetaStreamDriver(BusDriver):
 
     def __init__(self, entity, name, clock):
+        self._signals += ['valid', 'ready', 'last']
         BusDriver.__init__(self, entity, name, clock)
         self.clk = clock
         self.buffer = []
@@ -17,20 +16,18 @@ class StreamDriver(BusDriver):
     def accepted(self):
         return self.bus.valid.value.integer == 1 and self.bus.ready.value.integer == 1
 
-    def write(self, data):
-        self.bus.data <= data
-
-    def read(self):
-        return self.bus.data.value.integer
-
     def read_last(self):
         try:
             return self.bus.last.value.integer
         except:
             return 0
 
-    def _get_random_data(self):
-        return random.randint(0, 2**len(self.bus.data)-1)
+    def init_master(self):
+        self.bus.valid <= 0
+        self.bus.last <= 0
+
+    def init_slave(self):
+        self.bus.ready <= 0
 
     @cocotb.coroutine
     def monitor(self):
@@ -80,17 +77,31 @@ class StreamDriver(BusDriver):
         return rd
 
 
-class MatrixStreamDriver(StreamDriver):
+class StreamDriver(MetaStreamDriver):
 
-    _signals =['valid', 'ready', 'last']
+    def __init__(self, entity, name, clock):
+        self._signals = ['data']
+        MetaStreamDriver.__init__(self, entity, name, clock)
+
+    def write(self, data):
+        self.bus.data <= data
+
+    def read(self):
+        return self.bus.data.value.integer
+
+    def init_master(self):
+        MetaStreamDriver.init_master(self)
+        self.write(0)
+
+    def _get_random_data(self):
+        return random.randint(0, 2**len(self.bus.data)-1)
+
+class MatrixStreamDriver(MetaStreamDriver):
 
     def __init__(self, entity, name, clock, shape):
         self.shape = shape
-        for idx in mat.matrix_indexes(self.shape):
-            self._signals.append(self.get_element_name(idx))
-        BusDriver.__init__(self, entity, name, clock)
-        self.clk = clock
-        self.buffer = []
+        self._signals = [self.get_element_name(idx) for idx in mat.matrix_indexes(self.shape)]
+        MetaStreamDriver.__init__(self, entity, name, clock)
 
     def get_element_name(self, indexes):
         return 'data_' + '_'.join([str(i) for i in indexes])
@@ -119,15 +130,11 @@ class MatrixStreamDriver(StreamDriver):
         width = len(self.get_element(self.first_idx))
         return 2**width - 1
 
-    def init_sink(self):
-        self.bus.valid <= 0
-        self.bus.last <= 0
-        for idx in mat.matrix_indexes(self.shape):
-            self.get_element(idx) <= 0
-
-    def init_source(self):
-        self.bus.ready <= 0
-
     @property
     def first_idx(self):
         return tuple([0] * len(self.shape))
+
+    def init_master(self):
+        MetaStreamDriver.init_master(self)
+        for idx in mat.matrix_indexes(self.shape):
+            self.get_element(idx) <= 0

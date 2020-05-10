@@ -58,10 +58,8 @@ def check_data(dut, N, width, height, invert=False, burps_in=False, burps_out=Fa
     s_axis = MatrixStreamDriver(dut, name='output_', clock=dut.clk, shape=(N,))
     input_w = len(dut.input__data)
     output_w = len(s_axis.get_element(s_axis.first_idx))
-    m_axis.bus.valid <= 0
-    m_axis.bus.last <= 0
-    m_axis.bus.data <= 0
-    s_axis.init_source()
+    m_axis.init_master()
+    s_axis.init_slave()
     yield RisingEdge(dut.clk)
 
     image_size = width * height
