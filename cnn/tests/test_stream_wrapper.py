@@ -1,8 +1,7 @@
 from nmigen_cocotb import run
 from nmigen import *
-from cnn.stream_wrapper import StreamWrapper_Fifo, StreamWrapper
+from cnn.stream_wrapper import StreamWrapper
 from cnn.interfaces import DataStream
-from cnn.tests.utils import subfinder
 from cnn.tests.interfaces import StreamDriver
 
 import pytest
@@ -32,10 +31,15 @@ class ExampleCore(Elaboratable):
         m = Module()
         comb = m.d.comb
         sync = m.d.sync
-        shift_register = Array([Signal(len(self.data_i), name='sr_'+str(i)) for i in range(self.latency + 1)])
-        comb += [shift_register[0].eq(self.data_i), self.data_o.eq(shift_register[-1])]
+
+        registers = Array([Signal(len(self.data_i), name='register_'+str(i)) for i in range(self.latency)])
+
+        comb += self.data_o.eq(registers[-1])
+
         with m.If(self.clken):
-            sync += [nxt.eq(prv) for prv, nxt in zip(shift_register[:-1], shift_register[1:])]
+            sync += registers[0].eq(self.data_i)
+            sync += [nxt.eq(prv) for prv, nxt in zip(registers[:-1], registers[1:])]
+
         return m
 
 
@@ -77,7 +81,7 @@ def check_data(dut, burps_in=False, burps_out=False, dummy=0):
     rd_data = yield s_axis.recv(burps=burps_out)
 
     assert wr_data == m_axis.buffer, f'{wr_data} != {m_axis.buffer}'
-    assert subfinder(mylist=rd_data, pattern=expected), f'{expected}\nNot in\n{rd_data}'
+    assert rd_data == expected, f'{expected}\n!=\n{rd_data}'
 
 
 tf = TF(check_data)
@@ -87,25 +91,13 @@ tf.add_option('dummy', [0] * 5)
 tf.generate_tests()
 
 
-@pytest.mark.parametrize("latency, max_latency", [(4, 4), (4, 6)])
-def test_main_wrapper_fifo(latency, max_latency):
-    core = StreamWrapper_Fifo(wrapped_core=ExampleCore(16, latency),
-                              input_stream=DataStream(16, direction='sink', name='input'),
-                              output_stream=DataStream(16, direction='source', name='output'),
-                              input_map={'data': 'data_i'},
-                              output_map={'data': 'data_o'},
-                              max_latency=max_latency)
-    ports = core.get_ports()
-    run(core, 'cnn.tests.test_stream_wrapper', ports=ports, vcd_file=f'./test_stream_wrapper_fifo.vcd')
-
-
-@pytest.mark.parametrize("latency, max_latency", [(4, 4), (4, 6)])
-def test_main_wrapper_nofifo(latency, max_latency):
+@pytest.mark.parametrize("latency", [1, 4, 5])
+def test_main_wrapper(latency):
     core = StreamWrapper(wrapped_core=ExampleCore(16, latency),
                          input_stream=DataStream(16, direction='sink', name='input'),
                          output_stream=DataStream(16, direction='source', name='output'),
                          input_map={'data': 'data_i'},
                          output_map={'data': 'data_o'},
-                         max_latency=max_latency)
+                         latency=latency)
     ports = core.get_ports()
     run(core, 'cnn.tests.test_stream_wrapper', ports=ports, vcd_file=f'./test_stream_wrapper.vcd')
