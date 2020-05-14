@@ -38,20 +38,27 @@ class Dataport(Record):
     def data_ports(self):
         return [getattr(self, name) for name, _ in self.DATA_FIELDS]
 
+    def connect_source(self, other):
+        ops = []
+        for name, width in self.DATA_FIELDS:
+            ops.append(getattr(self, name).eq(getattr(other, name)))
+        return ops
+
 
 
 class GenericStream(Dataport):
 
+    _source_driven_signals = [('valid', 1), ('last', 1)]
+    _sink_driven_signals = [('ready', 1)]
+
     def get_layout(self, direction):
         layout = Dataport.get_layout(self, direction)
         if direction == 'sink':
-            layout += [('valid', 1, Direction.FANIN),
-                       ('last', 1, Direction.FANIN),
-                       ('ready', 1, Direction.FANOUT),]
+            layout += [(n, w, Direction.FANIN) for n, w in self._source_driven_signals]
+            layout += [(n, w, Direction.FANOUT) for n, w in self._sink_driven_signals]
         elif direction == 'source':
-            layout += [('valid', 1, Direction.FANOUT),
-                       ('last', 1, Direction.FANOUT),
-                       ('ready', 1, Direction.FANIN)]
+            layout += [(n, w, Direction.FANOUT) for n, w in self._source_driven_signals]
+            layout += [(n, w, Direction.FANIN) for n, w in self._sink_driven_signals]
         else:
             raise ValueError(f'direction should be sink or source.')
         return layout
@@ -61,6 +68,14 @@ class GenericStream(Dataport):
 
     def is_last(self):
         return (self.accepted() == 1) & (self.last == 1)
+
+    def connect_source(self, other):
+        ops = Dataport.connect_source(self, other)
+        for n, w in self._source_driven_signals:
+            ops.append(getattr(self, n).eq(getattr(other, n)))
+        for n, w in self._sink_driven_signals:
+            ops.append(getattr(other, n).eq(getattr(self, n)))
+
 
 
 class DataStream(GenericStream):
