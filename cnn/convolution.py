@@ -5,11 +5,11 @@ from cnn.farm import Farm
 
 class Convolution(Elaboratable):
     
-    def __init__(self, input_w, image_w, N, n_cores):
-        self.image_w = image_w
+    def __init__(self, input_w, input_shape, N, n_cores):
+        self.input_shape = input_shape
         self.n_cores = n_cores
         self.matrix_feeder = MatrixFeeder(input_w=input_w,
-                                          row_length=image_w,
+                                          input_shape=input_shape,
                                           N=N,
                                           invert=False)
         self.farm = Farm(input_w=input_w,

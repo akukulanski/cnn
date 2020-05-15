@@ -10,8 +10,9 @@ class MatrixFeeder(Elaboratable):
     signal only when the current NxN matrix corresponds to
     a valid NxN submatrix of the image.
     """
-    def __init__(self, input_w, row_length, N, invert=False):
-        self.row_length = row_length
+    def __init__(self, input_w, input_shape, N, invert=False):
+        self.input_shape = input_shape
+        self.output_shape = (input_shape[0] + 1 - N, input_shape[1] + 1 - N)
         self.invert = invert
         self.input = DataStream(width=input_w, direction='sink', name='input')
         self.output = MatrixStream(width=input_w, shape=(N,N), direction='source', name='output')
@@ -43,10 +44,12 @@ class MatrixFeeder(Elaboratable):
         sync = m.d.sync
         comb = m.d.comb
 
-        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, self.row_length, self.N, self.invert)
+        image_w = self.input_shape[1]
+
+        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, image_w, self.N, self.invert)
         m.submodules.submatrix_regs = submatrix = SubmatrixRegisters(self.input_w, self.N, self.invert)
 
-        current_column = Signal(range(self.row_length))
+        current_column = Signal(range(image_w))
 
         comb += [row_fifos.input.valid.eq(self.input.valid),
                  row_fifos.input.data.eq(self.input.data),
@@ -62,7 +65,7 @@ class MatrixFeeder(Elaboratable):
                 ]
 
         with m.If(submatrix.output.accepted()):
-            sync += current_column.eq(_incr(current_column, self.row_length))
+            sync += current_column.eq(_incr(current_column, image_w))
 
         # logic to dismiss data when the output matrix is not
         # a valid submatrix of the input.

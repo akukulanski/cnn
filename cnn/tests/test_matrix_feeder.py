@@ -52,7 +52,7 @@ def check_monitors_data(buff_in, buff_out, width, height, N, invert=False):
 
 
 @cocotb.coroutine
-def check_data(dut, N, width, height, invert=False, burps_in=False, burps_out=False, dummy=0):
+def check_data(dut, N, height, width, invert=False, burps_in=False, burps_out=False, dummy=0):
 
     yield init_test(dut)
 
@@ -89,7 +89,8 @@ def check_data(dut, N, width, height, invert=False, burps_in=False, burps_out=Fa
 try:
     running_cocotb = True
     N = int(os.environ['coco_param_N'], 10)
-    width = int(os.environ['coco_param_row_length'], 10)
+    height = int(os.environ['coco_param_height'], 10)
+    width = int(os.environ['coco_param_width'], 10)
     invert = int(os.environ['coco_param_invert'], 10)
 except KeyError as e:
     running_cocotb = False
@@ -97,8 +98,8 @@ except KeyError as e:
 if running_cocotb:
     tf_test_data = TF(check_data)
     tf_test_data.add_option('N', [N])
+    tf_test_data.add_option('height', [height])
     tf_test_data.add_option('width', [width])
-    tf_test_data.add_option('height', [5])
     tf_test_data.add_option('invert', [invert])
     tf_test_data.add_option('burps_in', [False, True])
     tf_test_data.add_option('burps_out', [False, True])
@@ -106,17 +107,18 @@ if running_cocotb:
 
 
 @pytest.mark.timeout(10)
-@pytest.mark.parametrize("input_w, row_length, N, invert", [(8, 5, 3, False),
-                                                            (8, 5, 3, True),
-                                                           ])
-def test_matrix_feeder(input_w, row_length, N, invert):
+@pytest.mark.parametrize("input_w, height, width, N, invert", [(8, 5, 5, 3, False),
+                                                               (8, 5, 5, 3, True),
+                                                               ])
+def test_matrix_feeder(input_w, height, width, N, invert):
     os.environ['coco_param_N'] = str(N)
-    os.environ['coco_param_row_length'] = str(row_length)
+    os.environ['coco_param_height'] = str(height)
+    os.environ['coco_param_width'] = str(width)
     os.environ['coco_param_invert'] = str(int(invert))
     core = MatrixFeeder(input_w=input_w,
-                        row_length=row_length,
+                        input_shape=(height, width),
                         N=N,
                         invert=invert)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_matrix_feeder_i{input_w}_rowlength{row_length}_N{N}_invert{invert}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_matrix_feeder_i{input_w}_h{height}_w{width}_N{N}_invert{invert}.vcd')
     run(core, 'cnn.tests.test_matrix_feeder', ports=ports, vcd_file=vcd_file)
