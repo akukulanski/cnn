@@ -2,6 +2,7 @@ from nmigen import *
 from cnn.utils.operations import _incr
 from cnn.row_fifos import RowFifos
 from cnn.interfaces import DataStream, MatrixStream
+from cnn.resize import img_position_counter, is_last
 
 class MatrixFeeder(Elaboratable):
     """ N fifos that work synchronized to provide NxN matrixes
@@ -48,6 +49,9 @@ class MatrixFeeder(Elaboratable):
 
         m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, image_w, self.N, self.invert)
         m.submodules.submatrix_regs = submatrix = SubmatrixRegisters(self.input_w, self.N, self.invert)
+        
+        row, col = img_position_counter(m, sync, self.output, self.output_shape)
+        comb += self.output.last.eq(is_last(row, col, self.output_shape))
 
         current_column = Signal(range(image_w))
 

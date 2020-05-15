@@ -70,9 +70,9 @@ def check_data(dut, N, height, width, invert=False, burps_in=False, burps_out=Fa
 
     cocotb.fork(m_axis.monitor())
     cocotb.fork(s_axis.monitor())
-    cocotb.fork(s_axis.recv(expected_output_length, burps_out))
+    cocotb.fork(m_axis.send(wr_data, burps_in))
 
-    yield m_axis.send(wr_data, burps_in)
+    yield s_axis.recv(burps=burps_out)
 
     while len(s_axis.buffer) < expected_output_length:
         yield RisingEdge(dut.clk)
