@@ -106,17 +106,15 @@ class MatrixStream(GenericStream):
     def n_elements(self):
         return mat.get_n_elements(self.shape)
 
-    @property
     def data_ports(self):
-        for idx in mat.matrix_indexes(self.shape):
-            yield getattr(self, self.get_signal_name(idx))
+        return [getattr(self, self.get_signal_name(idx)) for idx in mat.matrix_indexes(self.shape)]
 
     def connect_data_ports(self, other):
         assert isinstance(other, MatrixStream)
-        return [data_o.eq(data_i) for data_o, data_i in zip(self.data_ports, other.data_ports)]
+        return [data_o.eq(data_i) for data_o, data_i in zip(self.data_ports(), other.data_ports())]
 
     def connect_to_const(self, const=0):
-        return [data_o.eq(const) for data_o in self.data_ports]
+        return [data_o.eq(const) for data_o in self.data_ports()]
 
     @property
     def matrix(self):
