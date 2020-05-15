@@ -3,10 +3,10 @@ from nmigen import *
 
 class TreeStage(Elaboratable):
 
-    def __init__(self, input_w, num_inputs, n, reg_in, reg_out):
+    def __init__(self, input_w, output_w, num_inputs, n, reg_in, reg_out):
         assert num_inputs % 2 == 0
         self.inputs = [Signal(signed(input_w), name=n+'_input_'+str(i)) for i in range(num_inputs)]
-        self.outputs = [Signal(signed(input_w + 1), name=n+'_output_'+str(i)) for i in range(int(num_inputs / 2))]
+        self.outputs = [Signal(signed(output_w), name=n+'_output_'+str(i)) for i in range(int(num_inputs / 2))]
         self.clken = Signal()
         self.reg_in = reg_in
         self.reg_out = reg_out
@@ -56,16 +56,29 @@ class TreeOperation(Elaboratable):
             _operation = self._operation
 
         self.n_stages = n_stages
-        self.inputs = [Signal(signed(input_w), name='input_' + str(i)) for i in range(2**(n_stages))]
-        self.output = Signal(signed(input_w + n_stages))
         self.clken = Signal()
         self.args = args
         self.kwargs = kwargs
-        self.stages = [_Stage(self.input_w+i,
-                              2**(self.n_stages-i),
-                              n='S'+str(i),
-                              *self.args,
-                              **self.kwargs) for i in range(self.n_stages)]
+        self.stages = []
+        for i in range(n_stages):
+            if i == 0:
+                stage_input_w = input_w
+            else:
+                stage_input_w = self.stages[-1].output_w
+            stage = _Stage(stage_input_w,
+                           self._stage_output_w(stage_input_w),
+                           2**(n_stages-i),
+                           n='S'+str(i),
+                           *args,
+                           **kwargs)
+            self.stages.append(stage)
+
+        self.inputs = [Signal(signed(input_w), name='input_' + str(i)) for i in range(2**(n_stages))]
+        self.output = Signal(signed(self.stages[-1].output_w))
+        for i in range(self.num_inputs):
+            name = self.inputs[i].name
+            print('\nname=', name)
+            setattr(self, self.inputs[i].name, self.inputs[i])
 
     def get_ports(self):
         ports = [self.clken] + self.inputs + [self.output]
@@ -114,9 +127,12 @@ class TreeOperation(Elaboratable):
 
 class TreeAdder(TreeOperation):
     _operation = lambda self, a, b: a + b
+    _stage_output_w = lambda self, stage_input_w: stage_input_w + 1
 
 class TreeHighest(TreeOperation):
     _operation = lambda self, a, b: Mux(a > b, a, b)
+    _stage_output_w = lambda self, stage_input_w: stage_input_w
 
 class TreeLowest(TreeOperation):
     _operation = lambda self, a, b: Mux(a < b, a, b)
+    _stage_output_w = lambda self, stage_input_w: stage_input_w
