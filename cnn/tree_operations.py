@@ -125,14 +125,26 @@ class TreeOperation(Elaboratable):
         return m
 
 
-class TreeAdder(TreeOperation):
-    _operation = lambda self, a, b: a + b
+class TreeAdderUnsigned(TreeOperation):
+    _operation = lambda self, a, b: a.as_unsigned() + b.as_unsigned()
     _stage_output_w = lambda self, stage_input_w: stage_input_w + 1
 
-class TreeHighest(TreeOperation):
-    _operation = lambda self, a, b: Mux(a > b, a, b)
+class TreeAdderSigned(TreeOperation):
+    _operation = lambda self, a, b: a.as_signed() + b.as_signed()
+    _stage_output_w = lambda self, stage_input_w: stage_input_w + 1
+
+class TreeHighestUnsigned(TreeOperation):
+    _operation = lambda self, a, b: Mux(a.as_unsigned() > b.as_unsigned(), a, b)
     _stage_output_w = lambda self, stage_input_w: stage_input_w
 
-class TreeLowest(TreeOperation):
-    _operation = lambda self, a, b: Mux(a < b, a, b)
+class TreeLowestSigned(TreeOperation):
+    _operation = lambda self, a, b: Mux(a.as_signed() < b.as_signed(), a, b)
+    _stage_output_w = lambda self, stage_input_w: stage_input_w
+
+class TreeLowestUnsigned(TreeOperation):
+    _operation = lambda self, a, b: Mux(a.as_unsigned() < b.as_unsigned(), a, b)
+    _stage_output_w = lambda self, stage_input_w: stage_input_w
+
+class TreeHighestSigned(TreeOperation):
+    _operation = lambda self, a, b: Mux(a.as_signed() > b.as_signed(), a, b)
     _stage_output_w = lambda self, stage_input_w: stage_input_w
