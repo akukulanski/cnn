@@ -23,7 +23,8 @@ The status of this project is "very" **WIP**!
 * [ ] Convolution Layer
 * [x] StreamWrapper for logic with clken
 * [x] Pooling: HDL + testbench
-* [ ] Sigmoid / Softmax / ReLU
+* [x] ReLU
+* [ ] Sigmoid / Softmax
 * [ ] Configurable MACC facilitate integration of DSP primitives
 * [ ] MLP node
 * [ ] MLP layer
