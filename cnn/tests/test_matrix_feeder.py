@@ -58,14 +58,14 @@ def check_data(dut, N, height, width, invert=False, burps_in=False, burps_out=Fa
 
     m_axis = StreamDriver(dut, name='input_', clock=dut.clk)
     s_axis = MatrixStreamDriver(dut, name='output_', clock=dut.clk, shape=(N,N))
-    input_w = len(dut.input__data)
+    data_w = len(dut.input__data)
     output_w = len(s_axis.get_element(s_axis.first_idx))
     m_axis.init_master()
     s_axis.init_slave()
     yield RisingEdge(dut.clk)
 
     image_size = width * height
-    wr_data = wr_b = [int(x % (2**input_w-1)) for x in range(image_size)]
+    wr_data = wr_b = [int(x % (2**data_w-1)) for x in range(image_size)]
     expected_output_length = (width + 1 - N) * (height + 1 - N)
 
     cocotb.fork(m_axis.monitor())
@@ -107,18 +107,18 @@ if running_cocotb:
 
 
 @pytest.mark.timeout(10)
-@pytest.mark.parametrize("input_w, height, width, N, invert", [(8, 5, 5, 3, False),
+@pytest.mark.parametrize("data_w, height, width, N, invert", [(8, 5, 5, 3, False),
                                                                (8, 5, 5, 3, True),
                                                                ])
-def test_matrix_feeder(input_w, height, width, N, invert):
+def test_matrix_feeder(data_w, height, width, N, invert):
     os.environ['coco_param_N'] = str(N)
     os.environ['coco_param_height'] = str(height)
     os.environ['coco_param_width'] = str(width)
     os.environ['coco_param_invert'] = str(int(invert))
-    core = MatrixFeeder(input_w=input_w,
+    core = MatrixFeeder(data_w=data_w,
                         input_shape=(height, width),
                         N=N,
                         invert=invert)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_matrix_feeder_i{input_w}_h{height}_w{width}_N{N}_invert{invert}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_matrix_feeder_i{data_w}_h{height}_w{width}_N{N}_invert{invert}.vcd')
     run(core, 'cnn.tests.test_matrix_feeder', ports=ports, vcd_file=vcd_file)

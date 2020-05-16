@@ -11,12 +11,12 @@ class MatrixFeeder(Elaboratable):
     signal only when the current NxN matrix corresponds to
     a valid NxN submatrix of the image.
     """
-    def __init__(self, input_w, input_shape, N, invert=False):
+    def __init__(self, data_w, input_shape, N, invert=False):
         self.input_shape = input_shape
         self.output_shape = (input_shape[0] + 1 - N, input_shape[1] + 1 - N)
         self.invert = invert
-        self.input = DataStream(width=input_w, direction='sink', name='input')
-        self.output = MatrixStream(width=input_w, shape=(N,N), direction='source', name='output')
+        self.input = DataStream(width=data_w, direction='sink', name='input')
+        self.output = MatrixStream(width=data_w, shape=(N,N), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -24,12 +24,8 @@ class MatrixFeeder(Elaboratable):
         return ports
 
     @property
-    def input_w(self):
+    def data_w(self):
         return len(self.input.data)
-
-    @property
-    def output_w(self):
-        return (self.output.width)
 
     @property
     def shape(self):
@@ -47,8 +43,8 @@ class MatrixFeeder(Elaboratable):
 
         image_w = self.input_shape[1]
 
-        m.submodules.row_fifos = row_fifos = RowFifos(self.input_w, image_w, self.N, self.invert)
-        m.submodules.submatrix_regs = submatrix = SubmatrixRegisters(self.input_w, self.N, self.invert)
+        m.submodules.row_fifos = row_fifos = RowFifos(self.data_w, image_w, self.N, self.invert)
+        m.submodules.submatrix_regs = submatrix = SubmatrixRegisters(self.data_w, self.N, self.invert)
         
         row, col = img_position_counter(m, sync, self.output, self.output_shape)
         comb += self.output.last.eq(is_last(row, col, self.output_shape))
@@ -87,10 +83,10 @@ class MatrixFeeder(Elaboratable):
 
 class SubmatrixRegisters(Elaboratable):
 
-    def __init__(self, input_w, N, invert=False):
+    def __init__(self, data_w, N, invert=False):
         self.invert = invert
-        self.input = MatrixStream(width=input_w, shape=(N,), direction='sink', name='input')
-        self.output = MatrixStream(width=input_w, shape=(N,N), direction='source', name='output')
+        self.input = MatrixStream(width=data_w, shape=(N,), direction='sink', name='input')
+        self.output = MatrixStream(width=data_w, shape=(N,N), direction='source', name='output')
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -98,12 +94,8 @@ class SubmatrixRegisters(Elaboratable):
         return ports
 
     @property
-    def input_w(self):
+    def data_w(self):
         return self.input.width
-
-    @property
-    def output_w(self):
-        return self.output.width
 
     @property
     def shape_i(self):

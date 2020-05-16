@@ -81,6 +81,7 @@ class GenericStream(Dataport):
 class DataStream(GenericStream):
     def __init__(self, width, *args, **kargs):
         self.DATA_FIELDS = [('data', width)]
+        self.width = width
         GenericStream.__init__(self, *args, **kargs)
 
 
