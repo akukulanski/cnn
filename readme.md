@@ -22,7 +22,7 @@ The status of this project is "very" **WIP**!
 * [x] Resizer (Padder & Cropper): HDL + testbench
 * [ ] Convolution Layer
 * [x] StreamWrapper for logic with clken
-* [ ] Pooling: HDL + testbench
+* [x] Pooling: HDL + testbench
 * [ ] Sigmoid / Softmax / ReLU
 * [ ] Configurable MACC facilitate integration of DSP primitives
 * [ ] MLP node
