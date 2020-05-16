@@ -77,7 +77,6 @@ class TreeOperation(Elaboratable):
         self.output = Signal(signed(self.stages[-1].output_w))
         for i in range(self.num_inputs):
             name = self.inputs[i].name
-            print('\nname=', name)
             setattr(self, self.inputs[i].name, self.inputs[i])
 
     def get_ports(self):
