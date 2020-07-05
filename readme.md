@@ -24,8 +24,9 @@ The status of this project is "very" **WIP**!
 * [x] StreamWrapper for logic with clken
 * [x] Pooling: HDL + testbench
 * [x] ReLU
+* [x] Ciruclar ROM: HDL + testbench
+* [x] Stream MACC: HDL + testbench
 * [ ] Sigmoid / Softmax
-* [ ] Configurable MACC facilitate integration of DSP primitives
 * [ ] MLP node
 * [ ] MLP layer
 * [ ] CNN (Customizable integration of the cores above)
