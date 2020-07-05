@@ -4,11 +4,11 @@ from cnn.utils.operations import _incr
 
 class CircularROM(Elaboratable):
 
-    def __init__(self, width, depth, init=None):
+    def __init__(self, width, init):
         self.width = width
-        self.depth = depth
+        self.depth = len(init)
         self.memory = Memory(width=width,
-                             depth=depth,
+                             depth=self.depth,
                              init=init)
         self.r_en = Signal()
         self.r_rdy = Signal()

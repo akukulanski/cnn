@@ -98,7 +98,6 @@ if running_cocotb:
     ])
 def test_core(width, depth):
     core = CircularROM(width=width,
-                       depth=depth,
                        init=mem_init[:depth])
     os.environ['cocotb_param_depth'] = str(depth)
     ports = core.get_ports()
