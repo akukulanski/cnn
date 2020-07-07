@@ -23,9 +23,15 @@ class SignedStreamDriver(StreamDriver):
         return self.bus.data.value.signed_integer
 
 class ROM():
-    def __init__(self, dut, width, depth):
+    _generator = {
+        'random': random.getrandbits,
+        'limit': lambda width: 2**(width-1),
+    }
+
+    def __init__(self, dut, width, depth, profile):
+        assert profile in self._generator
         self.dut = dut
-        self.memory = [random.getrandbits(width) for _ in range(depth)]
+        self.memory = [self._generator[profile](width) for _ in range(depth)]
         self.buffer = []
 
     def init(self):
@@ -55,22 +61,28 @@ def reset(dut):
     dut.rst <= 0
     yield RisingEdge(dut.clk)
 
-def check_output(buff_in, coeff, buff_out):
+def check_output(buff_in, coeff, buff_out, shift=0):
     assert len(buff_in) == len(coeff), (
         f'{len(buff_in)} != {len(coeff)}')
     assert len(buff_out) == 1, f'{len(buff_out)} != 1'
     acc = sum([a * b for a, b in zip(buff_in, coeff)])
-    assert acc == buff_out[0], f'{acc} != {buff_out[0]}'
+    assert (acc >> shift) == buff_out[0], f'{acc} != {buff_out[0]}'
 
 
 @cocotb.coroutine
-def check_data(dut, burps_in=False, burps_out=False, dummy=0):
+def check_data(dut, burps_in=False, burps_out=False, dummy=0, profile='random'):
     width_a = len(dut.input__data)
     width_b = len(dut.r_data)
     width_out = len(dut.output__data)
+    width_acc = len(dut.accumulator)
+    shift = width_acc - width_out
     
-    test_size = 128
-    rom = ROM(dut, width=width_b, depth=test_size)
+    prod_req_bits = width_a + width_b
+    # accum_req_bits = prod_req_bits + int(ceil(log2(test_size)))
+    max_test_size = 2 ** (width_acc - prod_req_bits)
+
+    test_size = min(128, max_test_size)
+    rom = ROM(dut, width=width_b, depth=test_size, profile=profile)
     m_axis = SignedStreamDriver(dut, name='input_', clock=dut.clk)
     s_axis = SignedStreamDriver(dut, name='output_', clock=dut.clk)
     
@@ -84,12 +96,15 @@ def check_data(dut, burps_in=False, burps_out=False, dummy=0):
     cocotb.fork(s_axis.monitor())
     cocotb.fork(rom.run())
     
-    data_in = [random.getrandbits(width_a) for _ in range(test_size)]
+    if profile == 'random':
+        data_in = [random.getrandbits(width_a) for _ in range(test_size)]
+    elif profile == 'limit':
+        data_in = [2**(width_a-1) for _ in range(test_size)]
 
     cocotb.fork(m_axis.send(data_in, burps_in))
     yield s_axis.recv(test_size, burps_out)
     
-    check_output(m_axis.buffer, rom.buffer, s_axis.buffer)
+    check_output(m_axis.buffer, rom.buffer, s_axis.buffer, shift=shift)
 
 
 @cocotb.coroutine
@@ -98,9 +113,14 @@ def check_multiple(dut, burps_in=False, burps_out=False, dummy=0):
     width_a = len(dut.input__data)
     width_b = len(dut.r_data)
     width_out = len(dut.output__data)
-    
-    test_size = 8
-    rom = ROM(dut, width=width_b, depth=test_size)
+    width_acc = len(dut.accumulator)
+    shift = width_acc - width_out
+
+    prod_req_bits = width_a + width_b
+    max_test_size = 2 ** (width_acc - prod_req_bits)
+
+    test_size = min(8, max_test_size)
+    rom = ROM(dut, width=width_b, depth=test_size, profile='random')
     m_axis = SignedStreamDriver(dut, name='input_', clock=dut.clk)
     s_axis = SignedStreamDriver(dut, name='output_', clock=dut.clk)
     
@@ -126,14 +146,19 @@ def check_multiple(dut, burps_in=False, burps_out=False, dummy=0):
     cocotb.fork(m_axis.send(data_in, burps_in))
     yield s_axis.recv(test_size, burps_out)
     
-    check_output(m_axis.buffer, rom.buffer, s_axis.buffer)
+    check_output(m_axis.buffer, rom.buffer, s_axis.buffer, shift=shift)
 
 
-tf_test_data = TF(check_data)
-tf_test_data.add_option('burps_in', [False, True])
-tf_test_data.add_option('burps_out', [False, True])
-tf_test_data.add_option('dummy', [0] * 5)
-tf_test_data.generate_tests()
+tf_test_random = TF(check_data)
+tf_test_random.add_option('burps_in', [False, True])
+tf_test_random.add_option('burps_out', [False, True])
+tf_test_random.add_option('dummy', [0] * 5)
+tf_test_random.add_option('profile', ['random'])
+tf_test_random.generate_tests(postfix='_random')
+
+tf_test_limit = TF(check_data)
+tf_test_limit.add_option('profile', ['limit'])
+tf_test_limit.generate_tests(postfix='_limit')
 
 tf_test_multiple = TF(check_multiple)
 tf_test_multiple.add_option('burps_in', [False, True])
@@ -141,10 +166,18 @@ tf_test_multiple.add_option('burps_out', [False, True])
 tf_test_multiple.add_option('dummy', [0] * 5)
 tf_test_multiple.generate_tests()
 
-@pytest.mark.parametrize("input_w, coeff_w", [(8, 9),])
-def test_stream_macc(input_w, coeff_w):
-    core = MACC_AXIS(input_w=input_w,
-                     coeff_w=coeff_w)
+
+@pytest.mark.parametrize("args, kwargs", [
+    ([], {'input_w': 8, 'coeff_w': 9}),
+    ([], {'input_w': 8, 'coeff_w': 9, 'accum_w': 19}),
+    ([], {'input_w': 8, 'coeff_w': 9, 'accum_w': 20, 'shift': 3}),
+])
+def test_stream_macc(args, kwargs):
+    core = MACC_AXIS(*args, **kwargs)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_stream_macc_wa{input_w}_wb{coeff_w}.vcd')
+    iw = len(core.input.data)
+    cw = len(core.r_data)
+    aw = len(core.accumulator)
+    ow = len(core.output.data)
+    vcd_file = vcd_only_if_env(f'./test_stream_macc_i{iw}_c{cw}_a{aw}_w{ow}.vcd')
     run(core, 'cnn.tests.test_stream_macc', ports=ports, vcd_file=vcd_file)
