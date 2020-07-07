@@ -5,11 +5,18 @@ from cnn.hdl_utils import Pipeline, signal_delay
 
 class MACC_AXIS(Elaboratable):
 
-    output_w = 48
+    _max_output_w = 48
 
-    def __init__(self, input_w, coeff_w):
+    def __init__(self, input_w, coeff_w, accum_w=None, shift=None):
+        if accum_w is None:
+            accum_w = self._max_output_w
+        if shift is None:
+            shift = 0
+        output_w = accum_w - shift
+        self.shift = shift
+        self.accumulator = Signal(signed(accum_w))
         self.input = DataStream(width=input_w, direction='sink', name='input')
-        self.output = DataStream(width=self.output_w, direction='source', name='output')
+        self.output = DataStream(width=output_w, direction='source', name='output')
         self.r_data = Signal(signed(coeff_w))
         self.r_en = Signal()
         self.r_rdy = Signal()
@@ -30,10 +37,8 @@ class MACC_AXIS(Elaboratable):
         accepted_last = self.input.accepted() & self.input.last
         last_delayed = signal_delay(m, accepted_last, self.latency, ce=clken)
         
-        _acc = Signal(signed(48))
-
-        comb += self.output.last.eq(self.output.valid)
-        comb += self.output.data.eq(_acc)
+        # _acc = Signal(signed(self._max_output_w), name='accumulator')
+        _resized = Signal(signed(self.output.width))
 
         with m.FSM() as fsm:
 
@@ -61,10 +66,14 @@ class MACC_AXIS(Elaboratable):
         a1, b1 = pipeline.add_stage( [a0, b0] )
         m2, = pipeline.add_stage( [a1 * b1] )
         m3, = pipeline.add_stage( [m2] )
-        out, = pipeline.add_stage( [_get_accum(_acc) + m3] )
+        out, = pipeline.add_stage( [_get_accum(self.accumulator) + m3] )
         pipeline.generate(m=m, ce=clken, domain='sync')
 
-        comb += _acc.eq(out)
-        comb += self.output.data.eq(out)
+        comb += self.accumulator.eq(out)
+
+        comb += _resized.eq(out[self.shift:].as_signed())
+
+        comb += self.output.data.eq(_resized)
+        comb += self.output.last.eq(self.output.valid)
 
         return m
