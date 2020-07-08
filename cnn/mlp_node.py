@@ -6,27 +6,34 @@ from cnn.utils.operations import _incr
 
 from math import log2, ceil
 
-def calc_max_acc_w(width_a, width_b, n_inputs):
-    worst_case_a = -2**(width_a-1)
-    worst_case_b = -2**(width_b-1)
-    worst_prod = worst_case_a * worst_case_b
-    worst_acc = n_inputs * worst_prod
-    return ceil(log2(abs(worst_acc)))
+
+def accum_req_bits(w_a, w_b, n):
+    # accum_req_bits = prod_req_bits + int(ceil(log2(test_size)))
+    return w_a + w_b + int(ceil(log2(n)))
+
 
 class mlpNode(Elaboratable):
 
     def __init__(self, data_w, weight_w, n_inputs, rom_init):
         assert len(rom_init) % (n_inputs+1) == 0
-        _output_w = calc_max_acc_w(data_w, weight_w, n_inputs)
+        accum_w = accum_req_bits(data_w, weight_w, n_inputs + 1) # +1 bias
+        shift = weight_w - 1 # compensate weights gain
+
         self.n_inputs = n_inputs
+        
         self.rom = CircularROM(width=weight_w,
                                init=rom_init)
+
         self.macc = MACC_AXIS(input_w=data_w,
-                              coeff_w=weight_w)
-        assert _output_w <= len(self.macc.output.data), (
-            f'Overflow may occur.')
+                              coeff_w=weight_w,
+                              accum_w=accum_w,
+                              shift=shift)
+
+        output_w = len(self.macc.output.data)
+        assert output_w == accum_w - shift, (
+            f'{output_w} == {accum_w} - {shift}')
         self.input = DataStream(width=data_w, direction='sink', name='input')
-        self.output = DataStream(width=_output_w, direction='source', name='output')
+        self.output = DataStream(width=output_w, direction='source', name='output')
 
     def get_ports(self):
         ports = []
