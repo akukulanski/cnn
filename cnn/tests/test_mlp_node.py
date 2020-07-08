@@ -37,7 +37,7 @@ def reset(dut):
     dut.rst <= 0
     yield RisingEdge(dut.clk)
 
-def check_output(buff_in, coeff, buff_out):
+def check_output(buff_in, coeff, buff_out, shift=0):
     assert n_frames == len(buff_in) / n_inputs, (
         f'{n_frames} != {len(buff_in)} / {n_inputs}')
     assert len(buff_in) + n_frames == len(coeff), (
@@ -50,7 +50,7 @@ def check_output(buff_in, coeff, buff_out):
         co = coeff[i*n_rom:(i+1)*n_rom]
         acc = sum([a * b for a, b in zip(di, co)])
         acc += co[-1]
-        assert acc == buff_out[i], f'{acc} != {buff_out[i]}'
+        assert (acc >> shift) == buff_out[i], f'{acc} != {buff_out[i]}'
 
 
 @cocotb.coroutine
@@ -59,6 +59,8 @@ def check_data(dut, burps_in=False, burps_out=False, dummy=0):
     data_w = len(dut.input__data)
     coeff_w = len(dut.rom.r_data)
     output_w = len(dut.output__data)
+    acc_w = len(dut.macc.accumulator)
+    shift = acc_w - output_w
     rom_init = get_rom(coeff_w, (n_inputs+1)*n_frames, seed=seed)
     
     test_size = n_inputs
@@ -78,7 +80,10 @@ def check_data(dut, burps_in=False, burps_out=False, dummy=0):
         cocotb.fork(m_axis.send(data_in, burps_in))
         yield s_axis.recv(1, burps_out)
     
-    check_output(m_axis.buffer, rom_init[:(n_inputs+1)*n_frames], s_axis.buffer)
+    check_output(buff_in=m_axis.buffer,
+                 coeff=rom_init[:(n_inputs+1)*n_frames],
+                 buff_out=s_axis.buffer,
+                 shift=shift)
 
 
 try:
