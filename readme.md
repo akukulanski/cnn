@@ -27,7 +27,7 @@ The status of this project is "very" **WIP**!
 * [x] Ciruclar ROM: HDL + testbench
 * [x] Stream MACC: HDL + testbench
 * [ ] Sigmoid / Softmax
-* [ ] MLP node
+* [x] MLP node
 * [ ] MLP layer
 * [ ] CNN (Customizable integration of the cores above)
 * [ ] UART interface to be able to run some tests in hw with a low-cost fpga (only as a proof of concept)
