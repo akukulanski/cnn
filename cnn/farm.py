@@ -5,20 +5,52 @@ from cnn.utils.operations import _incr
 
 
 class Farm(Elaboratable):
-    #
-    # WARNING:
-    # The dataflow is controlled ONLY by the input_a AXIS interface.
-    # The input_b AXIS interface is DUMMY, and should always have valid values in the input.
-    # The ready of the input_b interface will be attached to input_a.accepted(), and a valid=1
-    # will be assumed.
-    #
-    # Why?
-    # I want to avoid a combinational path between the valid of input_b and the ready of input_a.
-    #
-    def __init__(self, input_w, shape, n_cores):
-        self.cores = [DotProduct(input_w, shape) for _ in range(n_cores)]
-        self.input_a = MatrixStream(width=input_w, shape=shape, direction='sink', name='input_a')
-        self.input_b = MatrixStream(width=input_w, shape=shape, direction='sink', name='input_b')
+    _doc_ = """
+    "Farm" of DotProduct cores, for parallel computation.
+    The performed operation is the dot product of two NxM
+    matrixes.
+
+    Keep in mind that since throughput will never be higher
+    than one output per clock, it doesn't make sense to use
+    a higher number of DotProduct cores than the latency of
+    each one of them.
+
+    The dataflow is controlled ONLY by the input_a Stream interface.
+    The input_b stream interface is DUMMY, and should always
+    have valid values in the input. The ready of the input_b
+    interface will be attached to input_a.accepted(), and a valid=1
+    will be assumed. Why?
+    I want to avoid a combinational path between the valid of input_b
+    and the ready of input_a.
+
+    Interfaces
+    ----------
+    input_a : Matrix Stream, input
+        Input a matrix data.
+
+    input_b : Matrix Stream, input
+        Input b matrix data.
+        TO DO: should not be a stream, but plain "matrix shaped" values.
+
+    output : Data Stream, output
+        Dot product computated value.
+
+    Parameters
+    ----------
+    width : int
+        Bit width of both inputs.
+
+    shape : tuple
+        Input shape (N, M).
+
+    n_cores : int
+        Number of paralell computations of dot product.
+    """
+
+    def __init__(self, width, shape, n_cores):
+        self.cores = [DotProduct(width, shape) for _ in range(n_cores)]
+        self.input_a = MatrixStream(width=width, shape=shape, direction='sink', name='input_a')
+        self.input_b = MatrixStream(width=width, shape=shape, direction='sink', name='input_b')
         self.output = DataStream(self.output_w, direction='source', name='output')
 
     def get_ports(self):

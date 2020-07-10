@@ -1,7 +1,7 @@
 from nmigen_cocotb import run
 from cnn.relu import Relu
-from cnn.tests.interfaces import StreamDriver
-from cnn.tests.utils import vcd_only_if_env, int_from_twos_comp, twos_comp_from_int
+from cnn.tests.interfaces import SignedStreamDriver as Driver
+from cnn.tests.utils import vcd_only_if_env, int_from_twos_comp
 import pytest
 import numpy as np
 import os
@@ -17,17 +17,16 @@ except:
     pass
 
 
-def get_expected_data(data_w, wr_data, leak):
+def calc_expected(width, wr_data, leak):
     expected = []
-    for w in wr_data:
-        val = int_from_twos_comp(w, data_w)
+    for val in wr_data:
         if val >= 0:
             exp = val
         elif leak == 0:
             exp = 0
         else:
-            exp = int(floor(val / 2**(data_w-leak)))
-        expected.append(twos_comp_from_int(exp, data_w))
+            exp = int(floor(val / 2**(width-leak)))
+        expected.append(exp)
     return expected
 
 
@@ -48,9 +47,9 @@ def reset(dut):
 @cocotb.coroutine
 def check_data(dut, leak, burps_in=False, burps_out=False, dummy=0):
 
-    m_axis = StreamDriver(dut, name='input_', clock=dut.clk)
-    s_axis = StreamDriver(dut, name='output_', clock=dut.clk)
-    data_w = len(dut.input__data)
+    m_axis = Driver(dut, name='input_', clock=dut.clk)
+    s_axis = Driver(dut, name='output_', clock=dut.clk)
+    width = len(dut.input__data)
 
     create_clock(dut)
     m_axis.init_master()
@@ -58,8 +57,7 @@ def check_data(dut, leak, burps_in=False, burps_out=False, dummy=0):
     yield reset(dut)
 
     test_size = 50
-    wr_data = [random.getrandbits(data_w) for _ in range(test_size)]
-    expected = get_expected_data(data_w, wr_data, leak)
+    wr_data = [int_from_twos_comp(random.getrandbits(width), width) for _ in range(test_size)]
     
     cocotb.fork(m_axis.monitor())
     cocotb.fork(s_axis.monitor())
@@ -67,6 +65,7 @@ def check_data(dut, leak, burps_in=False, burps_out=False, dummy=0):
     send_thread = cocotb.fork(m_axis.send(wr_data, burps=burps_in))
     rd_data = yield s_axis.recv(burps=burps_out)
 
+    expected = calc_expected(width, wr_data, leak)
     assert len(m_axis.buffer) == test_size, f'{len(m_axis.buffer)} != {test_size}'
     assert len(s_axis.buffer) == len(expected), f'{len(s_axis.buffer)} != {len(expected)}'
     assert rd_data == expected, f'\n{rd_data}\n!=\n{expected}'
@@ -87,16 +86,16 @@ if running_cocotb:
 
 
 @pytest.mark.timeout(10)
-@pytest.mark.parametrize("data_w, leak",
-                        [(8, 0),
-                         (8, 1),
-                         (8, 7),
-                         (8, 8),
-                        ])
-def test_main(data_w, leak):
+@pytest.mark.parametrize("width, leak", [
+    (8, 0),
+    (8, 1),
+    (8, 7),
+    (8, 8),
+])
+def test_main(width, leak):
     os.environ['coco_param_leak'] = str(leak)
-    core = Relu(data_w=data_w,
+    core = Relu(width=width,
                 leak=leak)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_relu_w{data_w}_l{leak}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_relu_w{width}_l{leak}.vcd')
     run(core, 'cnn.tests.test_relu', ports=ports, vcd_file=vcd_file)

@@ -37,8 +37,6 @@ def check_data(dut, N, burps_in=False, burps_out=False, dummy=0):
     test_size = 10
     m_axis = MatrixStreamDriver(dut, name='input_', clock=dut.clk, shape=(N,))
     s_axis = StreamDriver(dut, name='output_', clock=dut.clk)
-    input_w = len(m_axis.get_element(m_axis.first_idx))
-    output_w = len(dut.output__data)
     
     m_axis.init_master()
     s_axis.init_slave()
@@ -54,8 +52,6 @@ def check_data(dut, N, burps_in=False, burps_out=False, dummy=0):
     cocotb.fork(m_axis.send(wr_data, burps=burps_in))
     rd = yield s_axis.recv(burps=burps_out)
 
-    dut._log.info(f'Buffer in length: {len(m_axis.buffer)}.')
-    dut._log.info(f'Buffer out length: {len(s_axis.buffer)}.')
     assert len(m_axis.buffer) == len(wr_data), f'{len(m_axis.buffer)} != {len(wr_data)}'
     assert len(s_axis.buffer) == len(expected), f'{len(s_axis.buffer)} != {len(expected)}'
     assert s_axis.buffer == expected, f'{s_axis.buffer}\n!=\n{expected}'
@@ -75,18 +71,18 @@ if running_cocotb:
 
 
 @pytest.mark.timeout(10)
-@pytest.mark.parametrize("input_w, n_stages, reg_in, reg_out", [(8, 1, True, True),
+@pytest.mark.parametrize("width_i, n_stages, reg_in, reg_out", [(8, 1, True, True),
                                                                 (8, 3, False, False),
                                                                 (8, 3, True, False),
                                                                 (8, 3, False, True),
                                                                 (8, 3, True, True),])
-def test_main(input_w, n_stages, reg_in, reg_out):
-    core = TreeHighestUnsignedWrapped(input_w=input_w,
+def test_main(width_i, n_stages, reg_in, reg_out):
+    core = TreeHighestUnsignedWrapped(width_i=width_i,
                                       n_stages=n_stages,
                                       reg_in=reg_in,
                                       reg_out=reg_out)
     N = len(core.inputs)
     os.environ['coco_param_N'] = str(N)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_highest_w{input_w}_s{n_stages}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_highest_w{width_i}_s{n_stages}.vcd')
     run(core, 'cnn.tests.test_highest', ports=ports, vcd_file=vcd_file)

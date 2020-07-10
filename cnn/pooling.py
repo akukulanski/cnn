@@ -132,7 +132,7 @@ class Pooling(Elaboratable):
         tree_n_stages = int(ceil(log2(n_inputs)))
 
         m.submodules.matrix_feeder = matrix_feeder = self.matrix_feeder
-        m.submodules.pooler = pooler = pooling_core(input_w=self.input.width,
+        m.submodules.pooler = pooler = pooling_core(width_i=self.input.width,
                                                     n_stages=tree_n_stages,
                                                     reg_in=False,
                                                     reg_out=False)

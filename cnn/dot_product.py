@@ -15,9 +15,9 @@ class DotProduct(Elaboratable):
     # Why?
     # I want to avoid a combinational path between the valid of input_b and the ready of input_a.
     #
-    def __init__(self, input_w, shape):
-        self.input_a = MatrixStream(width=input_w, shape=shape, direction='sink', name='input_a')
-        self.input_b = MatrixStream(width=input_w, shape=shape, direction='sink', name='input_b')
+    def __init__(self, width_i, shape):
+        self.input_a = MatrixStream(width=width_i, shape=shape, direction='sink', name='input_a')
+        self.input_b = MatrixStream(width=width_i, shape=shape, direction='sink', name='input_b')
         self.output = DataStream(self.output_w, direction='source', name='output')
 
     def get_ports(self):

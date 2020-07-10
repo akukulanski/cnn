@@ -35,13 +35,13 @@ if running_cocotb:
     tf_test_data.generate_tests()
 
 
-@pytest.mark.parametrize("input_w, shape, n_cores", [(8, (4,2), 3)])
-def test_farm(input_w, shape, n_cores):
+@pytest.mark.parametrize("width, shape, n_cores", [(8, (4,2), 3)])
+def test_farm(width, shape, n_cores):
     os.environ['coco_param_shape'] = str(shape)
-    core = Farm(input_w=input_w,
+    core = Farm(width=width,
                 shape=shape,
                 n_cores=n_cores)
     ports = core.get_ports()
     printable_shape = '_'.join([str(i) for i in shape])
-    vcd_file = vcd_only_if_env(f'./test_farm_i{input_w}_shape{printable_shape}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_farm_i{width}_shape{printable_shape}.vcd')
     run(core, 'cnn.tests.test_farm', ports=ports, vcd_file=vcd_file)

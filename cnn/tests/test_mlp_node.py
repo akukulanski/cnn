@@ -38,14 +38,14 @@ def reset(dut):
     yield RisingEdge(dut.clk)
 
 def check_output(buff_in, coeff, buff_out, shift=0):
-    assert n_frames == len(buff_in) / n_inputs, (
-        f'{n_frames} != {len(buff_in)} / {n_inputs}')
-    assert len(buff_in) + n_frames == len(coeff), (
-        f'{len(buff_in)} + {n_frames} != {len(coeff)}')
-    assert len(buff_out) == n_frames, (
-        f'{len(buff_out)} != {n_frames}')
+    assert n_neurons == len(buff_in) / n_inputs, (
+        f'{n_neurons} != {len(buff_in)} / {n_inputs}')
+    assert len(buff_in) + n_neurons == len(coeff), (
+        f'{len(buff_in)} + {n_neurons} != {len(coeff)}')
+    assert len(buff_out) == n_neurons, (
+        f'{len(buff_out)} != {n_neurons}')
     n_rom = n_inputs + 1
-    for i in range(n_frames):
+    for i in range(n_neurons):
         di = buff_in[i*n_inputs:(i+1)*n_inputs]
         co = coeff[i*n_rom:(i+1)*n_rom]
         acc = sum([a * b for a, b in zip(di, co)])
@@ -56,12 +56,12 @@ def check_output(buff_in, coeff, buff_out, shift=0):
 @cocotb.coroutine
 def check_data(dut, burps_in=False, burps_out=False, dummy=0):
 
-    data_w = len(dut.input__data)
-    coeff_w = len(dut.rom.r_data)
+    width_i = len(dut.input__data)
+    width_w = len(dut.rom.r_data)
     output_w = len(dut.output__data)
     acc_w = len(dut.macc.accumulator)
     shift = acc_w - output_w
-    rom_init = get_rom(coeff_w, (n_inputs+1)*n_frames, seed=seed)
+    rom_init = get_rom(width_w, (n_inputs+1)*n_neurons, seed=seed)
     
     test_size = n_inputs
     m_axis = SignedStreamDriver(dut, name='input_', clock=dut.clk)
@@ -75,13 +75,13 @@ def check_data(dut, burps_in=False, burps_out=False, dummy=0):
     cocotb.fork(m_axis.monitor())
     cocotb.fork(s_axis.monitor())
 
-    for i in range(n_frames):
-        data_in = [random.getrandbits(data_w) for _ in range(test_size)]
+    for i in range(n_neurons):
+        data_in = [random.getrandbits(width_i) for _ in range(test_size)]
         cocotb.fork(m_axis.send(data_in, burps_in))
         yield s_axis.recv(1, burps_out)
     
     check_output(buff_in=m_axis.buffer,
-                 coeff=rom_init[:(n_inputs+1)*n_frames],
+                 coeff=rom_init[:(n_inputs+1)*n_neurons],
                  buff_out=s_axis.buffer,
                  shift=shift)
 
@@ -89,7 +89,7 @@ def check_data(dut, burps_in=False, burps_out=False, dummy=0):
 try:
     running_cocotb = True
     n_inputs = int(os.environ['coco_param_n_inputs'], 10)
-    n_frames = int(os.environ['coco_param_n_frames'], 10)
+    n_neurons = int(os.environ['coco_param_n_neurons'], 10)
     seed = int(os.environ['coco_param_seed'], 10)
 except KeyError as e:
     running_cocotb = False
@@ -102,22 +102,22 @@ if running_cocotb:
     tf_test_data.generate_tests()
 
 
-@pytest.mark.parametrize("data_w, weight_w, n_inputs, n_frames",
+@pytest.mark.parametrize("width_i, width_w, n_inputs, n_neurons",
 [
     (8, 8, 8, 1),
     (8, 8, 8, 2),
     (8, 8, 1000, 2),
 ])
-def test_mlp_node(data_w, weight_w, n_inputs, n_frames):
+def test_mlp_node(width_i, width_w, n_inputs, n_neurons):
     seed = random.randint(0, 99999)
     os.environ['coco_param_n_inputs'] = str(n_inputs)
-    os.environ['coco_param_n_frames'] = str(n_frames)
-    os.environ['coco_param_seed'] = str(seed)
-    rom_init = get_rom(weight_w, (n_inputs+1)*n_frames, seed=seed)
-    core = mlpNode(data_w=data_w,
-                   weight_w=weight_w,
+    os.environ['coco_param_n_neurons'] = str(n_neurons)
+    os.environ['coco_param_seed'] = str(seed) # so from cocotb can generate same random data
+    rom_init = get_rom(width_w, (n_inputs+1)*n_neurons, seed=seed)
+    core = mlpNode(width_i=width_i,
+                   width_w=width_w,
                    n_inputs=n_inputs,
                    rom_init=rom_init)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_mlp_node_d{data_w}_w{weight_w}_n{n_inputs}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_mlp_node_d{width_i}_w{width_w}_n{n_inputs}_m{n_neurons}.vcd')
     run(core, 'cnn.tests.test_mlp_node', ports=ports, vcd_file=vcd_file)

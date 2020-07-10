@@ -1,8 +1,9 @@
 from nmigen_cocotb import run
 from cnn.dot_product import DotProduct
-from cnn.tests.utils import int_from_twos_comp, vcd_only_if_env
+from cnn.tests.utils import vcd_only_if_env
 import cnn.matrix as mat
-from cnn.tests.interfaces import MatrixStreamDriver, StreamDriver
+from cnn.tests.interfaces import SignedMatrixStreamDriver as MatrixDriver
+from cnn.tests.interfaces import SignedStreamDriver as Driver
 import pytest
 import random
 import numpy as np
@@ -39,13 +40,10 @@ def incremental_matrix(shape, size, max_value):
         data.append(matrix)
     return data
 
-def check_monitors_data(input_a, input_b, output, input_w, output_w):
+def check_monitors_data(input_a, input_b, output):
     for a, b, o in zip(input_a, input_b, output):
-        parsed_a = [int_from_twos_comp(x, input_w) for x in mat.flatten(a)]
-        parsed_b = [int_from_twos_comp(x, input_w) for x in mat.flatten(b)]
-        parsed_o = int_from_twos_comp(o, output_w)
-        expected_o = sum(np.multiply(parsed_a, parsed_b))
-        assert parsed_o == expected_o, f'{parsed_o} == {expected_o}'
+        expected_o = sum(np.multiply(mat.flatten(a), mat.flatten(b)))
+        assert o == expected_o, f'{o} == {expected_o}'
 
 @cocotb.coroutine
 def check_data(dut, shape, burps_in, burps_out, dummy=0):
@@ -53,19 +51,18 @@ def check_data(dut, shape, burps_in, burps_out, dummy=0):
     test_size = 20
     yield init_test(dut)
 
-    m_axis_a = MatrixStreamDriver(dut, name='input_a_', clock=dut.clk, shape=shape)
-    m_axis_b = MatrixStreamDriver(dut, name='input_b_', clock=dut.clk, shape=shape)
-    s_axis = StreamDriver(dut, name='output_', clock=dut.clk)
+    m_axis_a = MatrixDriver(dut, name='input_a_', clock=dut.clk, shape=shape)
+    m_axis_b = MatrixDriver(dut, name='input_b_', clock=dut.clk, shape=shape)
+    s_axis = Driver(dut, name='output_', clock=dut.clk)
     m_axis_a.init_master()
     m_axis_b.init_master()
     s_axis.init_slave()
     yield RisingEdge(dut.clk)
 
-    input_w = len(m_axis_a.get_element(m_axis_a.first_idx))
-    output_w = len(dut.output__data)
+    width_i = len(m_axis_a.get_element(m_axis_a.first_idx))
     
     wr_a = [m_axis_a._get_random_data() for _ in range(test_size)]
-    wr_b = incremental_matrix(shape, test_size, 2**input_w - 1)
+    wr_b = incremental_matrix(shape, test_size, 2**width_i - 1)
 
     cocotb.fork(m_axis_a.monitor())
     cocotb.fork(m_axis_b.monitor())
@@ -81,7 +78,7 @@ def check_data(dut, shape, burps_in, burps_out, dummy=0):
     assert len(m_axis_b.buffer) == test_size, f'{len(m_axis_b.buffer)} == {test_size}'
     assert len(s_axis.buffer) == test_size, f'{len(s_axis.buffer)} == {test_size}'
     
-    check_monitors_data(m_axis_a.buffer, m_axis_b.buffer, s_axis.buffer, input_w, output_w)
+    check_monitors_data(m_axis_a.buffer, m_axis_b.buffer, s_axis.buffer)
 
 
 try:
@@ -100,12 +97,12 @@ if running_cocotb:
     tf_test_data.add_option('dummy', [0] * 5) # repeat 5 times
     tf_test_data.generate_tests()
 
-@pytest.mark.parametrize("input_w, shape", [(8, (4,2))])
-def test_dot_product(input_w, shape):
+@pytest.mark.parametrize("width_i, shape", [(8, (4,2))])
+def test_dot_product(width_i, shape):
     os.environ['coco_param_shape'] = str(shape)
-    core = DotProduct(input_w=input_w,
+    core = DotProduct(width_i=width_i,
                       shape=shape)
     ports = core.get_ports()
     printable_shape = '_'.join([str(i) for i in shape])
-    vcd_file = vcd_only_if_env(f'./test_dot_product_i{input_w}_shape{printable_shape}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_dot_product_i{width_i}_shape{printable_shape}.vcd')
     run(core, 'cnn.tests.test_dot_product', ports=ports, vcd_file=vcd_file)

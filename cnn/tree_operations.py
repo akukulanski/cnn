@@ -3,10 +3,10 @@ from nmigen import *
 
 class TreeStage(Elaboratable):
 
-    def __init__(self, input_w, output_w, num_inputs, n, reg_in, reg_out):
+    def __init__(self, width_i, width_o, num_inputs, n, reg_in, reg_out):
         assert num_inputs % 2 == 0
-        self.inputs = [Signal(signed(input_w), name=n+'_input_'+str(i)) for i in range(num_inputs)]
-        self.outputs = [Signal(signed(output_w), name=n+'_output_'+str(i)) for i in range(int(num_inputs / 2))]
+        self.inputs = [Signal(signed(width_i), name=n+'_input_'+str(i)) for i in range(num_inputs)]
+        self.outputs = [Signal(signed(width_o), name=n+'_output_'+str(i)) for i in range(int(num_inputs / 2))]
         self.clken = Signal()
         self.reg_in = reg_in
         self.reg_out = reg_out
@@ -51,7 +51,7 @@ class TreeStage(Elaboratable):
 class TreeOperation(Elaboratable):
     _operation = None
 
-    def __init__(self, input_w, n_stages, *args, **kwargs):
+    def __init__(self, width_i, n_stages, *args, **kwargs):
         class _Stage(TreeStage):
             _operation = self._operation
 
@@ -62,18 +62,18 @@ class TreeOperation(Elaboratable):
         self.stages = []
         for i in range(n_stages):
             if i == 0:
-                stage_input_w = input_w
+                stage_width_i = width_i
             else:
-                stage_input_w = self.stages[-1].output_w
-            stage = _Stage(stage_input_w,
-                           self._stage_output_w(stage_input_w),
+                stage_width_i = self.stages[-1].output_w
+            stage = _Stage(stage_width_i,
+                           self._stage_output_w(stage_width_i),
                            2**(n_stages-i),
                            n='S'+str(i),
                            *args,
                            **kwargs)
             self.stages.append(stage)
 
-        self.inputs = [Signal(signed(input_w), name='input_' + str(i)) for i in range(2**(n_stages))]
+        self.inputs = [Signal(signed(width_i), name='input_' + str(i)) for i in range(2**(n_stages))]
         self.output = Signal(signed(self.stages[-1].output_w))
         for i in range(self.num_inputs):
             name = self.inputs[i].name

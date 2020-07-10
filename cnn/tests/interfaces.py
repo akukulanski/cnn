@@ -4,6 +4,7 @@ from cocotb.triggers import RisingEdge
 import random
 import cnn.matrix as mat
 
+_signed_limits = lambda width: (-2**(width-1), 2**(width-1)-1)
 
 class MetaStreamDriver(BusDriver):
 
@@ -94,7 +95,19 @@ class StreamDriver(MetaStreamDriver):
         self.write(0)
 
     def _get_random_data(self):
-        return random.randint(0, 2**len(self.bus.data)-1)
+        return random.getrandbits(len(self.bus.data))
+
+
+class SignedStreamDriver(StreamDriver):
+    def read(self):
+        return self.bus.data.value.signed_integer
+
+    def _get_random_data(self):
+        width = len(self.bus.data)
+        # _min, _max = -2**(width-1), 2**(width-1)-1
+        # return random.randint(_min, _max)
+        return random.randint(*_signed_limits(width))
+
 
 class MatrixStreamDriver(MetaStreamDriver):
 
@@ -116,19 +129,19 @@ class MatrixStreamDriver(MetaStreamDriver):
     def read(self):
         matrix = mat.create_empty_matrix(self.shape)
         for idx in mat.matrix_indexes(self.shape):
-            mat.set_matrix_element(matrix, idx, self.get_element(idx).value.integer)
+            val = self.get_element(idx).value.integer
+            mat.set_matrix_element(matrix, idx, val)
         return matrix
 
     def _get_random_data(self):
         matrix = mat.create_empty_matrix(self.shape)
         for idx in mat.matrix_indexes(self.shape):
-            mat.set_matrix_element(matrix, idx, random.randint(0, self._max_value))
+            mat.set_matrix_element(matrix, idx, random.getrandbits(self.width))
         return matrix
 
     @property
-    def _max_value(self):
-        width = len(self.get_element(self.first_idx))
-        return 2**width - 1
+    def width(self):
+        return len(self.get_element(self.first_idx))
 
     @property
     def first_idx(self):
@@ -138,3 +151,17 @@ class MatrixStreamDriver(MetaStreamDriver):
         MetaStreamDriver.init_master(self)
         for idx in mat.matrix_indexes(self.shape):
             self.get_element(idx) <= 0
+
+class SignedMatrixStreamDriver(MatrixStreamDriver):
+    def read(self):
+        matrix = mat.create_empty_matrix(self.shape)
+        for idx in mat.matrix_indexes(self.shape):
+            val = self.get_element(idx).value.signed_integer
+            mat.set_matrix_element(matrix, idx, val)
+        return matrix
+
+    def _get_random_data(self):
+        matrix = mat.create_empty_matrix(self.shape)
+        for idx in mat.matrix_indexes(self.shape):
+            mat.set_matrix_element(matrix, idx, random.randint(*_signed_limits(self.width)))
+        return matrix

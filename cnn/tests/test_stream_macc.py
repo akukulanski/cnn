@@ -1,7 +1,7 @@
 from nmigen_cocotb import run
-from cnn.stream_macc import MACC_AXIS
+from cnn.stream_macc import StreamMacc
 from cnn.tests.utils import vcd_only_if_env
-from cnn.tests.interfaces import StreamDriver
+from cnn.tests.interfaces import SignedStreamDriver
 
 import pytest
 import random
@@ -18,9 +18,6 @@ except:
 CLK_PERIOD_BASE = 100
 random.seed()
 
-class SignedStreamDriver(StreamDriver):
-    def read(self):
-        return self.bus.data.value.signed_integer
 
 class ROM():
     _generator = {
@@ -168,12 +165,12 @@ tf_test_multiple.generate_tests()
 
 
 @pytest.mark.parametrize("args, kwargs", [
-    ([], {'input_w': 8, 'coeff_w': 9}),
-    ([], {'input_w': 8, 'coeff_w': 9, 'accum_w': 19}),
-    ([], {'input_w': 8, 'coeff_w': 9, 'accum_w': 20, 'shift': 3}),
+    ([], {'width_i': 8, 'width_c': 9}),
+    ([], {'width_i': 8, 'width_c': 9, 'width_acc': 19}),
+    ([], {'width_i': 8, 'width_c': 9, 'width_acc': 20, 'shift': 3}),
 ])
 def test_stream_macc(args, kwargs):
-    core = MACC_AXIS(*args, **kwargs)
+    core = StreamMacc(*args, **kwargs)
     ports = core.get_ports()
     iw = len(core.input.data)
     cw = len(core.r_data)

@@ -4,19 +4,46 @@ from cnn.matrix_feeder import MatrixFeeder
 from cnn.farm import Farm
 
 class Convolution(Elaboratable):
+    _doc_ = """
+    Convolution of an input image with an NxN kernel.
+
+    Interfaces
+    ----------
+    input : Stream, input
+        Input image, where each data is an incomming pixel.
+
+    coeff : Matrix Stream, input
+        Kernel coefficients.
+        TO DO: should not be a stream, but plain "matrix shaped" values.
+
+
+    Parameters
+    ----------
+    width : int
+        Bit width of both the image data and kernel coefficients.
+
+    input_shape : tuple
+        Image input shape (rows, columns).
+
+    N : int
+        Kernel size (NxN)
+
+    n_cores : int
+        Number of paralell computations of dot product.
+    """
     
-    def __init__(self, input_w, input_shape, N, n_cores):
+    def __init__(self, width, input_shape, N, n_cores):
         self.input_shape = input_shape
         self.n_cores = n_cores
-        self.matrix_feeder = MatrixFeeder(data_w=input_w,
+        self.matrix_feeder = MatrixFeeder(data_w=width,
                                           input_shape=input_shape,
                                           N=N,
                                           invert=False)
-        self.farm = Farm(input_w=input_w,
+        self.farm = Farm(width=width,
                          shape=(N, N),
                          n_cores=n_cores)
-        self.coeff = MatrixStream(width=input_w, shape=(N, N), direction='sink', name='coeff')
-        self.input = DataStream(width=input_w, direction='sink', name='input')
+        self.coeff = MatrixStream(width=width, shape=(N, N), direction='sink', name='coeff')
+        self.input = DataStream(width=width, direction='sink', name='input')
         self.output = DataStream(width=len(self.farm.output.data), direction='source', name='output')
 
     def get_ports(self):

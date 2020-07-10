@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.tree_operations import TreeAdderSigned
-from cnn.tests.utils import int_from_twos_comp, subfinder, vcd_only_if_env
+from cnn.tests.utils import subfinder, vcd_only_if_env
 import pytest
 import random
 from math import ceil, log2
@@ -34,11 +34,9 @@ def set_input_vector(dut, vector):
     for idx, value in enumerate(vector):
         set_input(dut, idx, value)
 
-def get_random_vector(input_w, n_inputs):
-    return [random.randint(0, 2**input_w-1) for _ in range(n_inputs)]
-
-def calculate_output(data, input_w):
-    return sum([int_from_twos_comp(w, input_w) for w in data])
+def signed_random(width):
+    _min, _max = -2**(width-1), 2**(width-1)-1
+    return random.randint(_min, _max)
 
 @cocotb.coroutine
 def send(dut, data):
@@ -57,7 +55,7 @@ def recv(dut):
     buff = []
     yield RisingEdge(dut.clk)
     while dut.clken.value.integer:
-        buff.append(dut.output.value.integer)
+        buff.append(dut.output.value.signed_integer)
         yield RisingEdge(dut.clk)
     return buff
 
@@ -78,35 +76,34 @@ def init_test(dut):
 def check_data(dut, dummy=0):
 
     test_size = 100
-    input_w = len(dut.input_0)
+    width_i = len(dut.input_0)
     output_w = len(dut.output)
     n_inputs = num_inputs(dut)
 
     yield init_test(dut)
 
-    wr_data = [get_random_vector(input_w, n_inputs) for _ in range(test_size)]
-    expected = [calculate_output(data_i, input_w) for data_i in wr_data]
+    wr_data = []
+    for _ in range(test_size):
+        wr_data.append([signed_random(width_i) for _ in range(n_inputs)])
+    expected = [sum(x) for x in wr_data]
 
     cocotb.fork(send(dut, wr_data))
 
     rd_data = yield recv(dut)
-    rd_data = [int_from_twos_comp(d, output_w) for d in rd_data]
 
     assert len(rd_data) >= len(wr_data)
     assert subfinder(rd_data, expected), f'{expected} not in {rd_data}'
-
-    # dut._log.info(f'{expected} found successfully in {rd_data}')
 
 
 tf_test_data = TF(check_data)
 tf_test_data.add_option('dummy', [0] * 5)
 tf_test_data.generate_tests()
 
-@pytest.mark.parametrize("input_w, stages", [(8, 4), (8, 2), (8, 1),])
-def test_main(input_w, stages):
-    core = TreeAdderSigned(input_w=input_w,
+@pytest.mark.parametrize("width_i, stages", [(8, 4), (8, 2), (8, 1),])
+def test_main(width_i, stages):
+    core = TreeAdderSigned(width_i=width_i,
                            n_stages=stages,
                            reg_in=True, reg_out=True)
     ports = core.get_ports()
-    vcd_file = vcd_only_if_env(f'./test_adder_i{input_w}_s{stages}.vcd')
+    vcd_file = vcd_only_if_env(f'./test_adder_i{width_i}_s{stages}.vcd')
     run(core, 'cnn.tests.test_tree_operations', ports=ports, vcd_file=vcd_file)

@@ -1,6 +1,6 @@
 from nmigen_cocotb import run
 from cnn.mac import MAC
-from cnn.tests.utils import twos_comp_from_int, int_from_twos_comp, vcd_only_if_env
+from cnn.tests.utils import vcd_only_if_env
 import pytest
 import random
 from math import ceil
@@ -18,59 +18,26 @@ except:
 CLK_PERIOD_BASE = 100
 random.seed()
 
-class MacTest():
-    def __init__(self, dut):
-        self.dut = dut
-        self.input_w = len(self.dut.input_a)
-        self.output_w = len(self.dut.output)
-        self.buff_in = []
-        self.buff_out = []
+@cocotb.coroutine
+def input_monitor(dut, buff_in):
+    while True:
+        yield RisingEdge(dut.clk)
+        if dut.clken.value.integer:
+            buff_in.append((dut.input_a.value.signed_integer,
+                            dut.input_b.value.signed_integer))
 
-    @property    
-    def current_a(self):
-        return self.dut.input_a.value.integer
+@cocotb.coroutine
+def output_monitor(dut, buff_out):
+    while True:
+        yield RisingEdge(dut.clk)
+        if dut.valid_o.value.integer:
+            buff_out.append(dut.output.value.signed_integer)
 
-    @property
-    def current_b(self):
-        return self.dut.input_b.value.integer
-
-    @property
-    def current_output(self):
-        return self.dut.output.value.integer
-
-    @property
-    def current_valid_o(self):
-        return self.dut.valid_o.value.integer
-
-    @property
-    def current_clken(self):
-        return self.dut.clken.value.integer
-
-    @cocotb.coroutine
-    def input_monitor(self):
-        while True:
-            yield RisingEdge(self.dut.clk)
-            if self.current_clken:
-                self.buff_in.append((int_from_twos_comp(self.current_a, self.input_w), int_from_twos_comp(self.current_b, self.input_w)))
-
-    @cocotb.coroutine
-    def output_monitor(self):
-        while True:
-            yield RisingEdge(self.dut.clk)
-            if self.current_valid_o:
-                self.buff_out.append(int_from_twos_comp(self.current_output, self.output_w))
-
-    def check_data(self):
-        last = 0
-        for (a, b), o in zip(self.buff_in, self.buff_out):
-            assert o == last + a * b, f'{o} == {last} + {a} * {b}'
-            last += a * b
-
-
-def generate_pair(bits):
-    a = random.randint(0, 2**bits - 1)
-    b = random.randint(0, 2**bits - 1)
-    return a, b
+def check_output(buff_in, buff_out):
+    last = 0
+    for (a, b), o in zip(buff_in, buff_out):
+        assert o == last + a * b, f'{o} == {last} + {a} * {b}'
+        last += a * b
 
 
 @cocotb.coroutine
@@ -91,24 +58,23 @@ def check_data(dut):
 
     width_in = len(dut.input_a)
     width_out = len(dut.output)
-    test = MacTest(dut)
 
     yield init_test(dut)
     
-    cocotb.fork(test.input_monitor())
-    cocotb.fork(test.output_monitor())
-
-    limits = (-2**(width_in - 1), 2**(width_in - 1) - 1)
+    buff_in = []
+    buff_out = []
+    cocotb.fork(input_monitor(dut, buff_in))
+    cocotb.fork(output_monitor(dut, buff_out))
     
     dut.clken <= 1
-    for a, b in [(random.randint(*limits), random.randint(*limits)) for _ in range(100)]:
-        dut.input_a <= twos_comp_from_int(a, width_in)
-        dut.input_b <= twos_comp_from_int(b, width_in)
+    for  _ in range(100):
+        dut.input_a <= random.getrandbits(width_in)
+        dut.input_b <= random.getrandbits(width_in)
         yield RisingEdge(dut.clk)
 
     yield RisingEdge(dut.clk)
 
-    test.check_data()
+    check_output(buff_in, buff_out)
 
 
 tf_test_data = TF(check_data)

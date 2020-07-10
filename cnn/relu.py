@@ -21,22 +21,41 @@ def _relu(signal, leak):
 
 
 class Relu(Elaboratable):
+    _doc_ = """
+    ReLu operation.
 
-    def __init__(self, data_w, leak=0):
-        """
-            leak    in bits. The negative inputs will be shifted to
-                    the right (data_w - leak)
-                    0 - all negative values converted to 0
-                    1 - all negative values converted to -1
-                    2 - all negative values in [-2, -1]
-                    3 - all negative values in [-4, -1]
-                    ...
-                    data_w-1 - all negative values divided by 2
-                    data_w - identity (output=input)
-        """
+    Interfaces
+    ----------
+    input : Stream, input
+        Data input.
+
+    output : Stream, output
+        Data output.
+
+    Parameters
+    ----------
+    width : int
+        Bit width of the data.
+
+    leak : int
+        leak of the ReLu function (in bits).
+        The negative inputs will be shifted to
+        the right by (width - leak)
+        0 - all negative values converted to 0
+        1 - all negative values converted to -1
+        2 - all negative values between [-2, -1]
+        3 - all negative values between [-4, -1]
+        ...
+        width-2 - all negative values divided by 4
+        width-1 - all negative values divided by 2
+        width - identity (output=input)
+
+    """
+
+    def __init__(self, width, leak=0):
         self.leak = leak
-        self.input = DataStream(width=data_w, direction='sink', name='input')
-        self.output = DataStream(width=data_w, direction='source', name='output')
+        self.input = DataStream(width=width, direction='sink', name='input')
+        self.output = DataStream(width=width, direction='source', name='output')
 
     def get_ports(self):
         ports = []
@@ -50,7 +69,7 @@ class Relu(Elaboratable):
         comb = m.d.comb
 
         x = Signal()
-        sync += x.eq(~x) # Lets force a clock
+        sync += x.eq(~x) # Lets force the existence of a clock in the design
 
         comb += [
             self.output.valid.eq(self.input.valid),

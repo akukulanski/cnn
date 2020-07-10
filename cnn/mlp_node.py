@@ -1,6 +1,6 @@
 from nmigen import *
 from cnn.rom import CircularROM
-from cnn.stream_macc import MACC_AXIS
+from cnn.stream_macc import StreamMacc
 from cnn.interfaces import DataStream
 from cnn.utils.operations import _incr
 
@@ -8,31 +8,58 @@ from math import log2, ceil
 
 
 def accum_req_bits(w_a, w_b, n):
-    # accum_req_bits = prod_req_bits + int(ceil(log2(test_size)))
     return w_a + w_b + int(ceil(log2(n)))
 
 
 class mlpNode(Elaboratable):
+    _doc_ = """
+    MLP Node instantiates a Stream Macc and a Circular ROM
+    to store the corresponding weights. Both input and output
+    are Stream interfaces.
+    This MLP Node can actually do the job of N neurons serially
+    where each neuron will require (n_inputs + 1) weights stored.
 
-    def __init__(self, data_w, weight_w, n_inputs, rom_init):
+    Parameters
+    ----------
+    width_i : int
+        Bit width of data in stream interface.
+
+    width_w : int
+        Bit width of data in the ROM.
+
+    n_inputs : int
+        Number of inputs for each neuron.
+
+    rom_init : list
+        List with weights to initialize the ROM. It should
+        have the form
+        [N0_W0, N0_W1, ..., N0_Wn-1, N0_Wbias,
+         N1_W0, N1_W1, ..., N1_Wn-1, N1_Wbias,
+         ...
+        ]
+        where Nx_Wy refers to the weight of the sample 'y'
+        of neuron 'x'.
+    """
+
+    def __init__(self, width_i, width_w, n_inputs, rom_init):
         assert len(rom_init) % (n_inputs+1) == 0
-        accum_w = accum_req_bits(data_w, weight_w, n_inputs + 1) # +1 bias
-        shift = weight_w - 1 # compensate weights gain
+        accum_w = accum_req_bits(width_i, width_w, n_inputs + 1) # +1 bias
+        shift = width_w - 1 # compensate weights gain
 
         self.n_inputs = n_inputs
         
-        self.rom = CircularROM(width=weight_w,
+        self.rom = CircularROM(width=width_w,
                                init=rom_init)
 
-        self.macc = MACC_AXIS(input_w=data_w,
-                              coeff_w=weight_w,
-                              accum_w=accum_w,
-                              shift=shift)
+        self.macc = StreamMacc(width_i=width_i,
+                               width_c=width_w,
+                               width_acc=accum_w,
+                               shift=shift)
 
         output_w = len(self.macc.output.data)
         assert output_w == accum_w - shift, (
             f'{output_w} == {accum_w} - {shift}')
-        self.input = DataStream(width=data_w, direction='sink', name='input')
+        self.input = DataStream(width=width_i, direction='sink', name='input')
         self.output = DataStream(width=output_w, direction='source', name='output')
 
     def get_ports(self):

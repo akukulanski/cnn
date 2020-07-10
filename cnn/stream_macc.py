@@ -3,21 +3,66 @@ from cnn.interfaces import DataStream
 from cnn.hdl_utils import Pipeline, signal_delay
 
 
-class MACC_AXIS(Elaboratable):
+class StreamMacc(Elaboratable):
+    _doc_ = """
+    Multiplier and accumulator with selectable output division to scale
+    down result and a Stream interface.
+    The main input data interface is a Stream interface, while
+    for the coefficients a memory read port interface is used.
+    While the memory has r_rdy==1, the dataflow control will be
+    done in the input data stream interface. If the coefficients
+    come from the same interface as the input data, just assign
+    the ports of the Stream Macc you should just:
+    * ignore r_en
+    * tell the core that the memory is ready to be read when
+      the input data is valid by assigning:
+        core.r_rdy <-- core.input.valid
 
-    _max_output_w = 48
+    Interfaces
+    ----------
+    input : Data Stream, input
+        Input data.
+        Each product between the input data and the coeff data
+        will be accumulated, until a last is asserted. A last
+        will flush the pipeline and output the valid result,
+        clearing the accumulator afterwards.
 
-    def __init__(self, input_w, coeff_w, accum_w=None, shift=None):
-        if accum_w is None:
-            accum_w = self._max_output_w
+    coeff : {r_data, r_en, r_rdy}, input
+        Input coefficients.
+        TO DO: Implement ReadportInterface
+
+    output : Data Stream, output
+        Output data. Will output valid data after a last is
+        asserted in the input interface. Otherwise, it will
+        keep accumulating.
+
+    Parameters
+    ----------
+    width_i : int
+        Bit width of data in stream interface.
+
+    width_c : int
+        Bit width of the coefficients.
+
+    width_acc : int
+        Bit width of the accumulator.
+
+    shift : int
+        The accumulator result will be shifted to the right by
+        this number, so the output will be (accumulator / 2**shift).
+    """
+
+    def __init__(self, width_i, width_c, width_acc=None, shift=None):
+        if width_acc is None:
+            width_acc = 48
         if shift is None:
             shift = 0
-        output_w = accum_w - shift
+        output_w = width_acc - shift
         self.shift = shift
-        self.accumulator = Signal(signed(accum_w))
-        self.input = DataStream(width=input_w, direction='sink', name='input')
+        self.accumulator = Signal(signed(width_acc))
+        self.input = DataStream(width=width_i, direction='sink', name='input')
         self.output = DataStream(width=output_w, direction='source', name='output')
-        self.r_data = Signal(signed(coeff_w))
+        self.r_data = Signal(signed(width_c))
         self.r_en = Signal()
         self.r_rdy = Signal()
         self.latency = 5
@@ -37,8 +82,7 @@ class MACC_AXIS(Elaboratable):
         accepted_last = self.input.accepted() & self.input.last
         last_delayed = signal_delay(m, accepted_last, self.latency, ce=clken)
         
-        # _acc = Signal(signed(self._max_output_w), name='accumulator')
-        _resized = Signal(signed(self.output.width))
+        accum_shifted = Signal(signed(self.output.width))
 
         with m.FSM() as fsm:
 
@@ -71,9 +115,9 @@ class MACC_AXIS(Elaboratable):
 
         comb += self.accumulator.eq(out)
 
-        comb += _resized.eq(out[self.shift:].as_signed())
+        comb += accum_shifted.eq(out[self.shift:].as_signed())
 
-        comb += self.output.data.eq(_resized)
+        comb += self.output.data.eq(accum_shifted)
         comb += self.output.last.eq(self.output.valid)
 
         return m
