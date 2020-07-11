@@ -1,0 +1,22 @@
+language: python
+
+services:
+  - docker
+
+notifications:
+  email:
+    recipients:
+      - akukulanski@gmail.com
+    on_success: never # default: change
+    on_failure: always # default: always
+
+git:
+  depth: 1
+
+
+before_install:
+- docker pull akukulanski/hdl-tools:latest
+- docker build --tag image-cnn -f ./docker/dockerfile .
+
+script:
+- docker run -w /home -v $(pwd):/home image-cnn:latest python3 -m pytest -vs cnn
