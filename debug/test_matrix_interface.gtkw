@@ -5,7 +5,7 @@
 [dumpfile] "./test_matrix_interface_i8_shape4_2.vcd"
 [dumpfile_mtime] "Sun Apr 12 23:05:16 2020"
 [dumpfile_size] 5387
-[savefile] "./waveform_config/test_matrix_interface.gtkw"
+[savefile] "./debug/test_matrix_interface.gtkw"
 [timestart] 0
 [size] 1920 1016
 [pos] -1 -1

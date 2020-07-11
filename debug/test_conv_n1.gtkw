@@ -2,10 +2,10 @@
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
 [*] Fri Apr 24 03:09:44 2020
 [*]
-[dumpfile] "./test_convolution_i8_rowlength5_N3_n9.vcd"
+[dumpfile] "./test_convolution_i8_rowlength5_N3_n1.vcd"
 [dumpfile_mtime] "Fri Apr 24 03:08:41 2020"
 [dumpfile_size] 113748
-[savefile] "./waveform_config/test_conv_n9.gtkw"s
+[savefile] "./debug/test_conv_n9.gtkw"
 [timestart] 0
 [size] 1920 1016
 [pos] -1 -1

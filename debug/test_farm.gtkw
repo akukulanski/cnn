@@ -2,10 +2,10 @@
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
 [*] Mon Apr 13 01:44:20 2020
 [*]
-[dumpfile] "./test_dot_product_i8_shape4_2.vcd"
+[dumpfile] "./test_farm_i8_shape4_2.vcd"
 [dumpfile_mtime] "Mon Apr 13 01:42:58 2020"
 [dumpfile_size] 2144377
-[savefile] "./waveform_config/test_dot_product.gtkw"
+[savefile] "./debug/test_dot_product.gtkw"
 [timestart] 0
 [size] 1920 1016
 [pos] -1 -1

@@ -5,7 +5,7 @@
 [dumpfile] "./test_row_fifos_i8_rowlength5_N3_invert0.vcd"
 [dumpfile_mtime] "Mon Apr 13 02:55:27 2020"
 [dumpfile_size] 23663
-[savefile] "./waveform_config/test_row_fifos.gtkw"
+[savefile] "./debug/test_row_fifos.gtkw"
 [timestart] 0
 [size] 1920 1016
 [pos] -1 -1

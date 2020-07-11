@@ -5,7 +5,7 @@
 [dumpfile] "./test_matrix_feeder_i8_rowlength5_N3_invertFalse.vcd"
 [dumpfile_mtime] "Wed Apr 15 00:16:31 2020"
 [dumpfile_size] 512451
-[savefile] "./waveform_config/test_matrix_feeder.gtkw"
+[savefile] "./debug/test_matrix_feeder.gtkw"
 [timestart] 0
 [size] 1920 1016
 [pos] -1 -1
