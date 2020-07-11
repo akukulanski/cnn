@@ -5,6 +5,9 @@ This repository is an excuse to learn abount *Convolutional Neural Networks* by 
 The main goal is to learn, and to make good use of the tools I enjoy the most for digital design. These include
 *nmigen*, *cocotb*, *yosys*, *icarus verilog*, *gtkwave*.
 
+The main goal is to have an easy **python2fpga** port by generating a *Verilog* file from
+a trained nn designed with some Python lib like *Keras*.
+
 The status of this project is "very" **WIP**!
 
 
@@ -32,7 +35,7 @@ The status of this project is "very" **WIP**!
 * [ ] CNN (Customizable integration of the cores above)
 * [ ] UART interface to be able to run some tests in hw with a low-cost fpga (only as a proof of concept)
 * [ ] PC: Python Uart Tx/Rx
-* [ ] python2fpga
+* [ ] python2fpga (integration with keras?)
 
 **To do (enhacements):**
 * [ ] Paralell convolution by splitting input image
