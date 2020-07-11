@@ -1,0 +1,3 @@
+FROM akukulanski/hdl-tools:latest
+
+RUN python3 -m pip install numpy scipy pytest pytest-repeat pytest-timeout
