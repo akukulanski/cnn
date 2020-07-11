@@ -58,7 +58,7 @@ There is a [dockerfile](./docker/dockerfile) available with all the required too
 * [nmigen](https://github.com/nmigen/nmigen) (latest)
 * [yosys](https://github.com/YosysHQ/yosys) (v0.9+, can use *yowasp-yosys*)
 * [cocotb](https://github.com/cocotb/cocotb) (recommended 1.3.1+)
-* [icarus verilog v10.1](hhttps://github.com/steveicarus/iverilog) (ensure cocotb doesn't run iverilog with `-g2012`.)
+* [icarus verilog](hhttps://github.com/steveicarus/iverilog)
 * [nmigen-cocotb@icarus-g2005](https://github.com/akukulanski/nmigen-cocotb/tree/icarus-g2005)
 * pytest, pytest-repeat, pytest-timeout
 * numpy
