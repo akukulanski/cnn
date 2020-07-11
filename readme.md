@@ -35,37 +35,37 @@ The status of this project is "very" **WIP**!
 * [ ] python2fpga
 
 **To do (enhacements):**
-* [ ] Arbitrer to share dps resources
 * [ ] Paralell convolution by splitting input image
 
 **To do (tools):**
-* [ ] Dockerfile (test!)
-* [ ] CI
+* [x] Dockerfile
+* [x] CI
 * [ ] Python package
 * [ ] Example of verilog generation
 
 **To do (others):**
 * [ ] Organize files, interfaces, etc. (this one will remain "undone" until a more stable design is reached)
-* [ ] Document (at least a little!)
+* [ ] Document the cores, usage, etc.
 
 
 ### Requirements
 
-* [nmigen](https://github.com/m-labs/nmigen) v0.1
-* [yosys](https://github.com/YosysHQ/yosys) v0.9+
-* [cocotb](https://github.com/cocotb/cocotb)
-* [icarus verilog v10.1](hhttps://github.com/steveicarus/iverilog) (reported problems with v10.2+)
-* [nmigen-cocotb](https://github.com/akukulanski/nmigen-cocotb)
+There is a [dockerfile](./docker/dockerfile) available with all the required tools!
 
-Aditional Python deps:
-* pytest
+* [nmigen](https://github.com/nmigen/nmigen) (latest)
+* [yosys](https://github.com/YosysHQ/yosys) (v0.9+, can use *yowasp-yosys*)
+* [cocotb](https://github.com/cocotb/cocotb) (recommended 1.3.1+)
+* [icarus verilog v10.1](hhttps://github.com/steveicarus/iverilog) (ensure cocotb doesn't run iverilog with `-g2012`.)
+* [nmigen-cocotb@icarus-g2005](https://github.com/akukulanski/nmigen-cocotb/tree/icarus-g2005)
+* pytest, pytest-repeat, pytest-timeout
 * numpy
 * scipy
+
 
 ### Testing
 
 ```bash
-python3 -m pytest -vs cnn/
+python3 -m pytest -vs cnn/ --log-cli-level info
 ```
 
 ### Intro to nn
