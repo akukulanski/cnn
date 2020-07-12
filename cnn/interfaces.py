@@ -2,39 +2,43 @@ from nmigen import *
 from nmigen.hdl.rec import Direction
 import numpy as np
 
+_data_dir = {
+    None: Direction.NONE,
+    'sink': Direction.FANIN,
+    'source': Direction.FANOUT
+}
+
 class DataPort(Record):
 
-    def __init__(self, width, direction, layout=None, name=None, fields=None):
-        assert direction in ('sink', 'source')
-        self.direction = direction
-        d = Direction.FANIN if direction == 'sink' else Direction.FANOUT
+    def __init__(self, width, direction=None, layout=None, name=None, fields=None):
+        _d = _data_dir[direction]
         if layout is None:
             layout = []
         layout += [
-            ('data', width, d),
+            ('data', width, _d),
         ]
         Record.__init__(self, layout, name=name, fields=fields)
         self.flat = Cat(*[sig for n, sig in self.fields.items()])
         self.width = len(self.data)
+        self.direction = direction
 
 
 class ComplexPort(Record):
 
-    def __init__(self, width, direction, layout=None, name=None, fields=None):
-        assert direction in ('sink', 'source')
-        self.direction = direction
+    def __init__(self, width, direction=None, layout=None, name=None, fields=None):
+        _d = _data_dir[direction]
         if not isinstance(width, Shape):
             width = signed(width)
-        d = Direction.FANIN if direction == 'sink' else Direction.FANOUT
         if layout is None:
             layout = []
         layout += [
-            ('real', width, d),
-            ('imag', width, d),
+            ('real', width, _d),
+            ('imag', width, _d),
         ]
         Record.__init__(self, layout, name=name, fields=fields)
         self.flat = Cat(*[self.real, self.imag])
         self.width = len(self.real)
+        self.direction = direction
 
 
 def flat_idx(idx, shape):
@@ -60,18 +64,17 @@ def name_from_index(indexes):
 
 class MatrixPort(Record):
 
-    def __init__(self, width, shape, direction, layout=None, name=None, fields=None):
-        assert direction in ('sink', 'source')
+    def __init__(self, width, shape, direction=None, layout=None, name=None, fields=None):
+        _d = _data_dir[direction]
         self.shape = shape
         self.dimensions = len(shape)
         self.n_elements = int(np.prod(shape))
         self.direction = direction
-        d = Direction.FANIN if direction == 'sink' else Direction.FANOUT
         if layout is None:
             layout = []
         for i in range(self.n_elements):
             sig_name = name_from_index(shaped_idx(i, shape))
-            layout += [(sig_name, width, d)]
+            layout += [(sig_name, width, _d)]
         Record.__init__(self, layout, name=name, fields=fields)
         self.flat = Cat(*[sig for n, sig in self.fields.items()])
         self.width = len(self[name_from_index(shaped_idx(0, shape))])
@@ -133,6 +136,7 @@ class StreamPort(Record):
 class Stream(StreamPort):
     def __init__(self, dataport):
         self.dataport = dataport
+        self.width = dataport.width
         StreamPort.__init__(self,
                             direction=dataport.direction,
                             layout=list(dataport.layout),
@@ -144,6 +148,9 @@ def DataStream(*args, **kwargs):
     dataport = DataPort(*args, **kwargs)
     return Stream(dataport=dataport)
 
+def ComplexStream(*args, **kwargs):
+    dataport = ComplexPort(*args, **kwargs)
+    return Stream(dataport=dataport)
 
 def MatrixStream(*args, **kwargs):
     dataport = MatrixPort(*args, **kwargs)
