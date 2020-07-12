@@ -45,6 +45,10 @@ class Convolution(Elaboratable):
         self.coeff = MatrixStream(width=width, shape=(N, N), direction='sink', name='coeff')
         self.input = DataStream(width=width, direction='sink', name='input')
         self.output = DataStream(width=len(self.farm.output.data), direction='source', name='output')
+        self.input_w = len(self.input.data)
+        self.output_w = len(self.output.data)
+        self.shape = self.coeff.dataport.shape
+        self.N = self.coeff.dataport.shape[0]
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -52,22 +56,6 @@ class Convolution(Elaboratable):
         ports += [self.output[f] for f in self.output.fields]
         return ports
 
-    @property
-    def input_w(self):
-        return len(self.input.data)
-
-    @property
-    def output_w(self):
-        return len(self.output.data)
-
-    @property
-    def shape(self):
-        return self.coeff.shape
-
-    @property
-    def N(self):
-        return self.coeff.shape[0]
-    
 
     def elaborate(self, platform):
         m = Module()

@@ -10,22 +10,12 @@ class TreeStage(Elaboratable):
         self.clken = Signal()
         self.reg_in = reg_in
         self.reg_out = reg_out
+        self.input_w = len(self.inputs[0])
+        self.output_w = len(self.outputs[0])
+        self.latency = sum([int(b) for b in (reg_in, True, reg_out)])
 
     def get_ports(self):
-        ports = [self.clken] + self.inputs + self.outputs
-        return ports
-
-    @property
-    def input_w(self):
-        return len(self.inputs[0])
-
-    @property
-    def output_w(self):
-        return len(self.outputs[0])
-
-    @property
-    def latency(self):
-        return sum([int(b) for b in (self.reg_in, True, self.reg_out)])
+        return [self.clken] + self.inputs + self.outputs
 
     def elaborate(self, platform):
         m = Module()
@@ -75,29 +65,16 @@ class TreeOperation(Elaboratable):
 
         self.inputs = [Signal(signed(width_i), name='input_' + str(i)) for i in range(2**(n_stages))]
         self.output = Signal(signed(self.stages[-1].output_w))
-        for i in range(self.num_inputs):
+        for i in range(len(self.inputs)):
             name = self.inputs[i].name
             setattr(self, self.inputs[i].name, self.inputs[i])
+        self.input_w = len(self.inputs[0])
+        self.output_w = len(self.output)
+        self.latency = sum(stage.latency for stage in self.stages)
 
     def get_ports(self):
         ports = [self.clken] + self.inputs + [self.output]
         return ports
-
-    @property
-    def input_w(self):
-        return len(self.inputs[0])
-
-    @property
-    def output_w(self):
-        return len(self.output)
-
-    @property
-    def num_inputs(self):
-        return len(self.inputs)
-
-    @property
-    def latency(self):
-        return sum(stage.latency for stage in self.stages)
 
     def elaborate(self, platform):
         m = Module()
@@ -112,7 +89,7 @@ class TreeOperation(Elaboratable):
         comb += [stage.clken.eq(self.clken) for stage in stages]
 
         # Connect input to first stage
-        comb += [stages[0].inputs[i].eq(self.inputs[i]) for i in range(self.num_inputs)]
+        comb += [stages[0].inputs[i].eq(self.inputs[i]) for i in range(len(self.inputs))]
 
         # Pipelined stages
         for prv, nxt in zip(stages[0:-1], stages[1:]):

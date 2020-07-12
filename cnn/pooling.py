@@ -18,6 +18,7 @@ class MatrixFeederSkip(MatrixFeeder):
         self.output = MatrixStream(width=data_w, shape=(N,N), direction='source', name='output')
         self.matrix_feeder = MatrixFeeder(data_w, input_shape, N, invert=invert)
         self.output_shape = (int(input_shape[0] / N), int(input_shape[1] / N))
+        self.N = N
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
@@ -107,19 +108,13 @@ class Pooling(Elaboratable):
                                               invert=False)
         self.input = DataStream(width=data_w, direction='sink', name='input')
         self.output = DataStream(width=data_w, direction='source', name='output')
+        self.N = N
+        self.output_shape = [int(x/N) for x in input_shape]
 
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
-
-    @property
-    def N(self):
-        return self.matrix_feeder.shape[0]
-
-    @property
-    def output_shape(self):
-        return [int(x/self.N) for x in self.input_shape]
 
     def elaborate(self, platform):
         m = Module()

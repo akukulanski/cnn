@@ -3,6 +3,12 @@ from cnn.mac import MAC
 from cnn.utils.bits import required_bits
 from cnn.interfaces import DataStream, MatrixStream
 
+def calculate_output_width(width_i, n_inputs):
+    worst_value = -2**(width_i - 1)
+    worst_mult = worst_value ** 2
+    worst_result = worst_mult * n_inputs
+    return required_bits(worst_result)
+
 class DotProduct(Elaboratable):
     #
     # WARNING:
@@ -17,7 +23,11 @@ class DotProduct(Elaboratable):
     def __init__(self, width_i, shape):
         self.input_a = MatrixStream(width=width_i, shape=shape, direction='sink', name='input_a')
         self.input_b = MatrixStream(width=width_i, shape=shape, direction='sink', name='input_b')
+        self.input_w = self.input_a.dataport.width
+        self.n_inputs = self.input_a.dataport.n_elements
+        self.output_w = calculate_output_width(self.input_w, self.n_inputs)
         self.output = DataStream(self.output_w, direction='source', name='output')
+        self.shape = self.input_a.dataport.shape
 
     def get_ports(self):
         ports = []
@@ -25,28 +35,6 @@ class DotProduct(Elaboratable):
         ports += [self.input_b[f] for f in self.input_b.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
-    
-    @property
-    def input_w(self):
-        return self.input_a.dataport.width
-    
-    @property
-    def n_inputs(self):
-        return self.input_a.dataport.n_elements
-
-    @property
-    def shape(self):
-        return self.input_a.dataport.shape
-
-    @property
-    def output_w(self):
-        return self._calculate_output_width()
-
-    def _calculate_output_width(self):
-        worst_value = -2**(self.input_w - 1)
-        worst_mult = worst_value ** 2
-        worst_result = worst_mult * self.n_inputs
-        return required_bits(worst_result)
 
     def elaborate(self, platform):
         m = Module()

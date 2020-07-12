@@ -22,6 +22,7 @@ class StreamWrapper(Elaboratable):
         self.input_map = input_map
         self.output_map = output_map
         self.clken_signal = clken
+        self.wrapped_clken =  getattr(self.wrapped_core, clken)
        
     def get_ports(self):
         ports = []
@@ -34,10 +35,6 @@ class StreamWrapper(Elaboratable):
             return getattr(self.wrapped_core, key)
         else:
             return object.__getattr__(self, key)
-
-    @property
-    def wrapped_clken(self):
-        return getattr(self.wrapped_core, self.clken_signal)
 
     def get_wrapped_input_ports(self):
         try:

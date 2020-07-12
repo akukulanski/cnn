@@ -14,27 +14,16 @@ class RowFifos(Elaboratable):
         self.invert = invert
         self.input = DataStream(width=input_w, direction='sink', name='input')
         self.output = MatrixStream(width=input_w, shape=(N,), direction='source', name='output')
-
+        self.input_w = len(self.input.data)
+        self.output_w = self.output.dataport.width
+        self.shape = self.output.dataport.shape
+        self.N = self.output.dataport.shape[0]
+        
     def get_ports(self):
         ports = [self.input[f] for f in self.input.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
 
-    @property
-    def input_w(self):
-        return len(self.input.data)
-
-    @property
-    def output_w(self):
-        return self.output.dataport.width
-
-    @property
-    def shape(self):
-        return self.output.dataport.shape
-
-    @property
-    def N(self):
-        return self.output.dataport.shape[0]
 
     def elaborate(self, platform):
         m = Module()

@@ -51,7 +51,12 @@ class Farm(Elaboratable):
         self.cores = [DotProduct(width, shape) for _ in range(n_cores)]
         self.input_a = MatrixStream(width=width, shape=shape, direction='sink', name='input_a')
         self.input_b = MatrixStream(width=width, shape=shape, direction='sink', name='input_b')
+        self.output_w = self.cores[0].output_w
         self.output = DataStream(self.output_w, direction='source', name='output')
+        self.input_w = self.input_a.dataport.width    
+        self.n_inputs = self.input_a.dataport.n_elements
+        self.shape = self.input_a.dataport.shape
+        self.n_cores = len(self.cores)
 
     def get_ports(self):
         ports = []
@@ -59,26 +64,6 @@ class Farm(Elaboratable):
         ports += [self.input_b[f] for f in self.input_b.fields]
         ports += [self.output[f] for f in self.output.fields]
         return ports
-
-    @property
-    def input_w(self):
-        return self.input_a.width
-    
-    @property
-    def n_inputs(self):
-        return self.input_a.n_elements
-
-    @property
-    def shape(self):
-        return self.input_a.shape
-
-    @property
-    def output_w(self):
-        return self.cores[0].output_w
-
-    @property
-    def n_cores(self):
-        return len(self.cores)
 
     def elaborate(self, platform):
         m = Module()
