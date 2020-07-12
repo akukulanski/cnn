@@ -9,13 +9,8 @@ class Dataport(Record):
     def __init__(self, direction=None, name=None, fields=None):
         layout = self.get_layout(direction)
         Record.__init__(self, layout, name=name, fields=fields)
-
-    @property
-    def total_width(self):
-        return sum([width for name, width in self.DATA_FIELDS])
-
-    def flatten(self):
-        return Cat(*[getattr(self, data) for data, width in self.DATA_FIELDS])
+        self.flat = Cat(*self.data_ports())
+        self.total_width = len(self.flat)
 
     def get_layout(self, direction):
         if direction == 'sink':
@@ -31,7 +26,7 @@ class Dataport(Record):
         start_bit = 0
         assert len(flat_data) == self.total_width
         for name, width in self.DATA_FIELDS:
-            ops += [getattr(self, name).eq(flat_data[start_bit:start_bit+width])]
+            ops += [self[name].eq(flat_data[start_bit:start_bit+width])]
             start_bit += width
         return ops
 
@@ -41,7 +36,7 @@ class Dataport(Record):
     def connect_source(self, other):
         ops = []
         for name, width in self.DATA_FIELDS:
-            ops.append(getattr(self, name).eq(getattr(other, name)))
+            ops.append(self[name].eq(other[name]))
         return ops
 
 
@@ -118,13 +113,6 @@ class MatrixStream(GenericStream):
             name = name_from_index(shaped_idx(i, shape))
             self.DATA_FIELDS.append((name, width))
         GenericStream.__init__(self, *args, **kwargs)
-        self.flat = Cat(*self.data_ports())
-
-    def data_ports(self):
-        data_ports = []
-        for i in range(self.n_elements):
-            name = name_from_index(shaped_idx(i, self.shape))
-            yield self[name]
 
     def connect_data_ports(self, other):
         assert isinstance(other, MatrixStream)
