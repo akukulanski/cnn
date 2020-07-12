@@ -1,12 +1,8 @@
 from nmigen_cocotb import run
 from cnn.matrix_interface import MatrixInterfaceBypass
-import cnn.matrix as mat
-from cnn.tests.utils import vcd_only_if_env, pack, unpack
+from cnn.tests.utils import vcd_only_if_env, incremental_matrix
 from cnn.tests.interfaces import MatrixStreamDriver
 import pytest
-import random
-from math import ceil, log2
-import numpy as np
 import os
 
 try:
@@ -18,7 +14,6 @@ except:
     pass
 
 CLK_PERIOD_BASE = 100
-random.seed()
 
 
 @cocotb.coroutine
@@ -28,17 +23,6 @@ def init_test(dut):
     yield RisingEdge(dut.clk)
     dut.rst <= 0
     yield RisingEdge(dut.clk)
-
-def incremental_matrix(shape, size):
-    data = []
-    count = 0
-    for i in range(size):
-        matrix = mat.create_empty_matrix(shape)
-        for idx in mat.matrix_indexes(shape):
-            mat.set_matrix_element(matrix, idx, count)
-            count += 1
-        data.append(matrix)
-    return data
 
 
 @cocotb.coroutine
@@ -54,7 +38,8 @@ def check_data(dut, shape, dummy=0):
 
     yield RisingEdge(dut.clk)
 
-    wr_data = incremental_matrix(shape, test_size)
+    width_i = m_axis.width
+    wr_data = incremental_matrix(shape, test_size, 2**width_i - 1)
     expected_output_length = len(wr_data)
 
     cocotb.fork(m_axis.monitor())
@@ -66,8 +51,8 @@ def check_data(dut, shape, dummy=0):
     while len(s_axis.buffer) < len(m_axis.buffer):
         yield RisingEdge(dut.clk)
 
-    dut._log.info(f'Buffer in length: {len(m_axis.buffer)}.')
-    dut._log.info(f'Buffer out length: {len(s_axis.buffer)}.')
+    dut._log.debug(f'Buffer in length: {len(m_axis.buffer)}.')
+    dut._log.debug(f'Buffer out length: {len(s_axis.buffer)}.')
     
     assert len(s_axis.buffer) == expected_output_length, f'{len(s_axis.buffer)} != {expected_output_length}'
     assert m_axis.buffer == s_axis.buffer, f'{m_axis.buffer} == {s_axis.buffer}'

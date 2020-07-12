@@ -1,7 +1,6 @@
 from nmigen_cocotb import run
 from cnn.dot_product import DotProduct
-from cnn.tests.utils import vcd_only_if_env
-import cnn.matrix as mat
+from cnn.tests.utils import vcd_only_if_env, incremental_matrix
 from cnn.tests.interfaces import SignedMatrixStreamDriver as MatrixDriver
 from cnn.tests.interfaces import SignedStreamDriver as Driver
 import pytest
@@ -29,20 +28,9 @@ def init_test(dut):
     dut.rst <= 0
     yield RisingEdge(dut.clk)
 
-def incremental_matrix(shape, size, max_value):
-    data = []
-    count = 0
-    for i in range(size):
-        matrix = mat.create_empty_matrix(shape)
-        for idx in mat.matrix_indexes(shape):
-            mat.set_matrix_element(matrix, idx, count)
-            count = (count + 1) % max_value
-        data.append(matrix)
-    return data
-
 def check_monitors_data(input_a, input_b, output):
     for a, b, o in zip(input_a, input_b, output):
-        expected_o = sum(np.multiply(mat.flatten(a), mat.flatten(b)))
+        expected_o = sum(np.multiply(a, b))
         assert o == expected_o, f'{o} == {expected_o}'
 
 @cocotb.coroutine
@@ -59,7 +47,7 @@ def check_data(dut, shape, burps_in, burps_out, dummy=0):
     s_axis.init_slave()
     yield RisingEdge(dut.clk)
 
-    width_i = len(m_axis_a.get_element(m_axis_a.first_idx))
+    width_i = m_axis_a.width
     
     wr_a = [m_axis_a._get_random_data() for _ in range(test_size)]
     wr_b = incremental_matrix(shape, test_size, 2**width_i - 1)
@@ -73,7 +61,7 @@ def check_data(dut, shape, burps_in, burps_out, dummy=0):
 
     yield s_axis.recv(test_size, burps_out)
 
-    dut._log.info(f'Tested {len(s_axis.buffer)} cases.')
+    dut._log.debug(f'Tested {len(s_axis.buffer)} cases.')
     assert len(m_axis_a.buffer) == test_size, f'{len(m_axis_a.buffer)} == {test_size}'
     assert len(m_axis_b.buffer) == test_size, f'{len(m_axis_b.buffer)} == {test_size}'
     assert len(s_axis.buffer) == test_size, f'{len(s_axis.buffer)} == {test_size}'

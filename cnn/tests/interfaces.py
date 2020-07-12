@@ -1,8 +1,9 @@
 import cocotb
 from cocotb.drivers import BusDriver
 from cocotb.triggers import RisingEdge
+from cnn.interfaces import name_from_index, shaped_idx
 import random
-import cnn.matrix as mat
+import numpy as np
 
 _signed_limits = lambda width: (-2**(width-1), 2**(width-1)-1)
 
@@ -41,10 +42,7 @@ class MetaStreamDriver(BusDriver):
     def send(self, data, burps=False):
         data = list(data)
         while len(data):
-            if burps:
-                valid = random.randint(0, 1)
-            else:
-                valid = 1
+            valid = random.randint(0, 1) if burps else 1
             self.bus.valid <= valid
             if valid:
                 self.write(data[0])
@@ -52,7 +50,6 @@ class MetaStreamDriver(BusDriver):
             else:
                 self.write(self._get_random_data())
                 self.bus.last <= 0
-                # self.bus.last <= random.randint(0, 1)
             yield RisingEdge(self.clk)
             if self.accepted():
                 data.pop(0)
@@ -63,10 +60,7 @@ class MetaStreamDriver(BusDriver):
     def recv(self, n=-1, burps=False):
         rd = []
         while n:
-            if burps:
-                ready = random.randint(0, 1)
-            else:
-                ready = 1
+            ready = random.randint(0, 1) if burps else 1
             self.bus.ready <= ready
             yield RisingEdge(self.clk)
             if self.accepted():
@@ -104,8 +98,6 @@ class SignedStreamDriver(StreamDriver):
 
     def _get_random_data(self):
         width = len(self.bus.data)
-        # _min, _max = -2**(width-1), 2**(width-1)-1
-        # return random.randint(_min, _max)
         return random.randint(*_signed_limits(width))
 
 
@@ -113,55 +105,50 @@ class MatrixStreamDriver(MetaStreamDriver):
 
     def __init__(self, entity, name, clock, shape):
         self.shape = shape
-        self._signals = [self.get_element_name(idx) for idx in mat.matrix_indexes(self.shape)]
+        self.dimensions = len(shape)
+        self.n_elements = int(np.prod(shape))
+        self._signals = []
+        for idx in range(self.n_elements):
+            self._signals.append(name_from_index(shaped_idx(idx, shape)))
         MetaStreamDriver.__init__(self, entity, name, clock)
+        self.width = len(self.matrix[shaped_idx(0, self.shape)])
 
-    def get_element_name(self, indexes):
-        return 'data_' + '_'.join([str(i) for i in indexes])
-
-    def get_element(self, indexes):
-        return getattr(self.bus, self.get_element_name(indexes))
-    
     def write(self, data):
-        for idx in mat.matrix_indexes(self.shape):
-            self.get_element(idx) <= mat.get_matrix_element(data, idx)
+        assert len(data) == self.n_elements
+        for i, d in enumerate(data):
+            self.matrix[shaped_idx(i, self.shape)] <= d
 
     def read(self):
-        matrix = mat.create_empty_matrix(self.shape)
-        for idx in mat.matrix_indexes(self.shape):
-            val = self.get_element(idx).value.integer
-            mat.set_matrix_element(matrix, idx, val)
-        return matrix
+        r = []
+        for i in range(self.n_elements):
+            r.append(self.matrix[shaped_idx(i, self.shape)].value.integer)
+        return r
 
     def _get_random_data(self):
-        matrix = mat.create_empty_matrix(self.shape)
-        for idx in mat.matrix_indexes(self.shape):
-            mat.set_matrix_element(matrix, idx, random.getrandbits(self.width))
-        return matrix
-
-    @property
-    def width(self):
-        return len(self.get_element(self.first_idx))
-
-    @property
-    def first_idx(self):
-        return tuple([0] * len(self.shape))
+        return [random.getrandbits(self.width) for _ in range(self.n_elements)]
 
     def init_master(self):
         MetaStreamDriver.init_master(self)
-        for idx in mat.matrix_indexes(self.shape):
-            self.get_element(idx) <= 0
+        for i in range(self.n_elements):
+            self.matrix[shaped_idx(i, self.shape)] <= 0
+
+    @property
+    def matrix(self):
+        interface = self
+        class MatrixPort():
+            def __getitem__(self, tup):
+                if not hasattr(tup, '__iter__'):
+                    tup = (tup,)
+                assert len(tup) == len(interface.shape), f'{len(tup)} == {len(interface.shape)}'
+                return getattr(interface.bus, name_from_index(tup))
+        return MatrixPort()    
 
 class SignedMatrixStreamDriver(MatrixStreamDriver):
     def read(self):
-        matrix = mat.create_empty_matrix(self.shape)
-        for idx in mat.matrix_indexes(self.shape):
-            val = self.get_element(idx).value.signed_integer
-            mat.set_matrix_element(matrix, idx, val)
-        return matrix
+        r = []
+        for i in range(self.n_elements):
+            r.append(self.matrix[shaped_idx(i, self.shape)].value.signed_integer)
+        return r
 
     def _get_random_data(self):
-        matrix = mat.create_empty_matrix(self.shape)
-        for idx in mat.matrix_indexes(self.shape):
-            mat.set_matrix_element(matrix, idx, random.randint(*_signed_limits(self.width)))
-        return matrix
+        return [random.randint(*_signed_limits(self.width)) for _ in range(self.n_elements)]

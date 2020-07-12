@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 def twos_comp_from_int(val, bits):
     """compute the 2's complement of int value val"""
@@ -72,3 +73,14 @@ example usage:
     # returns input__data[8:16]
 """
 slice_signal = lambda value, index: (value >> index[0]) & (2 ** (index[1] - index[0]) - 1)
+
+
+def incremental_matrix(shape, size, max_value):
+    n_elements = int(np.prod(shape))
+    data = []
+    count = 0
+    for i in range(size):
+        matrix = [x % max_value for x in range(count, count + n_elements)]
+        data.append(matrix)
+        count = (count + n_elements) % max_value
+    return data

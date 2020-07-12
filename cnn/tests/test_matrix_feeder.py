@@ -28,27 +28,16 @@ def init_test(dut):
 def get_pixel(buffer, x, y, row_length):
     return buffer[row_length * y + x]
 
-def incremental_matrix(shape, size, max_value):
-    data = []
-    count = 0
-    for i in range(size):
-        matrix = mat.create_empty_matrix(shape)
-        for idx in mat.matrix_indexes(shape):
-            mat.set_matrix_element(matrix, idx, count)
-            count = (count + 1) % max_value
-        data.append(matrix)
-    return data
-
 def check_monitors_data(buff_in, buff_out, width, height, N, invert=False):
     input_image = np.reshape(buff_in, (height, width))
-    for i, output_matrix in enumerate(buff_out):
-        assert np.shape(output_matrix) == (N, N), f'{np.shape(output_matrix)} != {(N, N)})'
+    for i, output in enumerate(buff_out):
+        output_image = np.reshape(output, (N, N))
         idx_x = i % (width + 1 - N)
         idx_y = int(i / (width + 1 - N))
         expected_submatrix = input_image[idx_y:idx_y+N, idx_x:idx_x+N]
         if invert:
             expected_submatrix = expected_submatrix[::-1, ::-1]
-        assert (output_matrix == expected_submatrix).all(), f'output[{i}]: (x,y)={(idx_x,idx_y)}\n{output_matrix}\n!=\n{expected_submatrix}'
+        assert (output_image == expected_submatrix).all(), f'output[{i}]: (x,y)={(idx_x,idx_y)}\n{output_image}\n!=\n{expected_submatrix}'
 
 
 @cocotb.coroutine
@@ -59,7 +48,6 @@ def check_data(dut, N, height, width, invert=False, burps_in=False, burps_out=Fa
     m_axis = StreamDriver(dut, name='input_', clock=dut.clk)
     s_axis = MatrixStreamDriver(dut, name='output_', clock=dut.clk, shape=(N,N))
     data_w = len(dut.input__data)
-    output_w = len(s_axis.get_element(s_axis.first_idx))
     m_axis.init_master()
     s_axis.init_slave()
     yield RisingEdge(dut.clk)
@@ -77,8 +65,8 @@ def check_data(dut, N, height, width, invert=False, burps_in=False, burps_out=Fa
     while len(s_axis.buffer) < expected_output_length:
         yield RisingEdge(dut.clk)
 
-    dut._log.info(f'Buffer in length: {len(m_axis.buffer)}.')
-    dut._log.info(f'Buffer out length: {len(s_axis.buffer)}.')
+    dut._log.debug(f'Buffer in length: {len(m_axis.buffer)}.')
+    dut._log.debug(f'Buffer out length: {len(s_axis.buffer)}.')
     assert len(m_axis.buffer) == len(wr_data), f'{len(m_axis.buffer)} != {len(wr_data)}'
     assert len(s_axis.buffer) == expected_output_length, f'{len(s_axis.buffer)} != {expected_output_length}'
     

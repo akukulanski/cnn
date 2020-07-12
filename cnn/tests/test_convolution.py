@@ -1,8 +1,7 @@
 from nmigen_cocotb import run
 from cnn.convolution import Convolution
-from cnn.tests.interfaces import MatrixStreamDriver, SignedStreamDriver
+from cnn.tests.interfaces import SignedMatrixStreamDriver, SignedStreamDriver
 from cnn.tests.utils import vcd_only_if_env
-import cnn.matrix as mat
 import pytest
 import numpy as np
 import os
@@ -19,14 +18,10 @@ except:
 CLK_PERIOD_BASE = 100
 
 
-def parse_buffer(buff_in, img_width, img_height):
-    return np.reshape(buff_in, (img_height, img_width))
-
-
 def check_monitors_data(coeff, buff_in, buff_out, img_width, img_height, N):
-    input_image = parse_buffer(buff_in, img_width, img_height)
-    input_coeff = parse_buffer(mat.flatten(coeff), N, N)
-    output_image = parse_buffer(buff_out, img_width + 1 - N, img_height + 1 - N)
+    input_image = np.reshape(buff_in, (img_height, img_width))
+    input_coeff = np.reshape(coeff, (N, N))
+    output_image = np.reshape(buff_out, (img_height + 1 - N, img_width + 1 - N))
     expected_output = signal.convolve2d(input_image, input_coeff[::-1,::-1], mode='valid')
     assert (output_image == expected_output).all(), (
         f'\n{output_image}\n!=\n{expected_output}\n')
@@ -46,7 +41,7 @@ def check_data(dut, N, img_width, img_height=5, n_cores=1, burps_in=False, burps
 
     yield init_test(dut)
 
-    m_axis_coeff = MatrixStreamDriver(dut, name='coeff_', clock=dut.clk, shape=(N,N), signed=True)
+    m_axis_coeff = SignedMatrixStreamDriver(dut, name='coeff_', clock=dut.clk, shape=(N,N), signed=True)
     m_axis = SignedStreamDriver(dut, name='input_', clock=dut.clk)
     s_axis = SignedStreamDriver(dut, name='output_', clock=dut.clk)
     width = len(dut.input__data)
@@ -63,7 +58,7 @@ def check_data(dut, N, img_width, img_height=5, n_cores=1, burps_in=False, burps
     coeff = m_axis_coeff._get_random_data()
     m_axis_coeff.write(coeff)
 
-    dut._log.info(f'coeff={coeff}')
+    dut._log.debug(f'coeff={coeff}')
 
     cocotb.fork(m_axis.monitor())
     cocotb.fork(s_axis.monitor())
@@ -74,8 +69,8 @@ def check_data(dut, N, img_width, img_height=5, n_cores=1, burps_in=False, burps
     while len(s_axis.buffer) < expected_output_length:
         yield RisingEdge(dut.clk)
 
-    dut._log.info(f'Buffer in length: {len(m_axis.buffer)}.')
-    dut._log.info(f'Buffer out length: {len(s_axis.buffer)}.')
+    dut._log.debug(f'Buffer in length: {len(m_axis.buffer)}.')
+    dut._log.debug(f'Buffer out length: {len(s_axis.buffer)}.')
     assert len(m_axis.buffer) == len(wr_data), f'{len(m_axis.buffer)} != {len(wr_data)}'
     assert len(s_axis.buffer) == expected_output_length, f'{len(s_axis.buffer)} != {expected_output_length}'
     

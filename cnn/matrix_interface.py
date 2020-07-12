@@ -1,5 +1,4 @@
 from nmigen import *
-import cnn.matrix as mat
 from cnn.interfaces import MatrixStream
 
 

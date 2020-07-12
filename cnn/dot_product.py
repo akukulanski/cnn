@@ -2,7 +2,6 @@ from nmigen import *
 from cnn.mac import MAC
 from cnn.utils.bits import required_bits
 from cnn.interfaces import DataStream, MatrixStream
-import cnn.matrix as mat
 
 class DotProduct(Elaboratable):
     #

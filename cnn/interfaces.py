@@ -1,6 +1,5 @@
 from nmigen import *
 from nmigen.hdl.rec import Direction
-import cnn.matrix as mat
 import numpy as np
 
 class Dataport(Record):
