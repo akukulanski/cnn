@@ -75,8 +75,8 @@ class DotProduct(Elaboratable):
             
                 with m.If(self.input_a.accepted()):
                     m.next = "BUSY"
-                    sync += [tmp_input_a.eq(Cat(*self.input_a.flatten_matrix)), #self.input_a.data),
-                             tmp_input_b.eq(Cat(*self.input_b.flatten_matrix)), #Cat(*self.input_b)),
+                    sync += [tmp_input_a.eq(Cat(*self.input_a.flat)), #self.input_a.data),
+                             tmp_input_b.eq(Cat(*self.input_b.flat)), #Cat(*self.input_b)),
                              counter.eq(0),]
             
                 with m.If(self.output.accepted()):

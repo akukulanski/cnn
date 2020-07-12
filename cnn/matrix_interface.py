@@ -40,11 +40,6 @@ class MatrixInterfaceBypass(Elaboratable):
         # for data_i, data_o in zip(self.input.data_ports, self.output.data_ports):
         #     comb += data_o.eq(data_i)
         #
-        # * Individual assignment iterating through indexes
-        #
-        # for idx in mat.matrix_indexes(self.shape):
-        #    comb += self.output.matrix[idx].eq(self.input.matrix[idx])
-        #
         #######################################################################
 
         return m

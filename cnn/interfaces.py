@@ -1,6 +1,7 @@
 from nmigen import *
 from nmigen.hdl.rec import Direction
 import cnn.matrix as mat
+import numpy as np
 
 class Dataport(Record):
 
@@ -85,30 +86,46 @@ class DataStream(GenericStream):
         GenericStream.__init__(self, *args, **kargs)
 
 
+def flat_idx(idx, shape):
+    assert len(idx) == len(shape), f'{len(idx)} != {len(shape)}'
+    for i, s in zip(idx, shape):
+        assert i < s, f'{i} >= {s}'
+    t = 0
+    for i, v in enumerate(idx):
+        gran = np.prod(shape[i+1:])
+        t += gran * v
+    return t
+
+def shaped_idx(idx, shape):
+    t = []
+    for i, s in enumerate(shape):
+        gran = np.prod(shape[i+1:])
+        t.append(int(idx / gran))
+        idx = int(idx % gran)
+    return t
+
+def name_from_index(indexes):
+    return 'data_' + '_'.join([str(i) for i in indexes])
+
 class MatrixStream(GenericStream):
 
     def __init__(self, width, shape, *args, **kwargs):
         self.shape = shape
         self.width = width
+        self.dimensions = len(shape)
+        self.n_elements = int(np.prod(shape))
         self.DATA_FIELDS = []
-        for idx in mat.matrix_indexes(shape):
-            text_string = self.get_signal_name(idx)
-            self.DATA_FIELDS.append((text_string, width))
+        for i in range(self.n_elements):
+            name = name_from_index(shaped_idx(i, shape))
+            self.DATA_FIELDS.append((name, width))
         GenericStream.__init__(self, *args, **kwargs)
-
-    def get_signal_name(self, indexes):
-        return 'data_' + '_'.join([str(i) for i in indexes])
-
-    @property
-    def dimensions(self):
-        return mat.get_dimensions(self.shape)
-
-    @property
-    def n_elements(self):
-        return mat.get_n_elements(self.shape)
+        self.flat = Cat(*self.data_ports())
 
     def data_ports(self):
-        return [getattr(self, self.get_signal_name(idx)) for idx in mat.matrix_indexes(self.shape)]
+        data_ports = []
+        for i in range(self.n_elements):
+            name = name_from_index(shaped_idx(i, self.shape))
+            yield self[name]
 
     def connect_data_ports(self, other):
         assert isinstance(other, MatrixStream)
@@ -121,15 +138,10 @@ class MatrixStream(GenericStream):
     def matrix(self):
         interface = self
         class MatrixPort():
-            def __getitem__(self_mp, tup):
+            def __getitem__(self, tup):
                 if not hasattr(tup, '__iter__'):
                     tup = (tup,)
                 assert len(tup) == len(interface.shape), f'{len(tup)} == {len(interface.shape)}'
-                return getattr(interface, interface.get_signal_name(tup))
+                return interface[name_from_index(tup)]
         return MatrixPort()
 
-    @property
-    def flatten_matrix(self):
-        return [self.matrix[idx] for idx in mat.matrix_indexes(self.shape)]
-
-        
