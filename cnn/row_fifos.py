@@ -26,15 +26,15 @@ class RowFifos(Elaboratable):
 
     @property
     def output_w(self):
-        return self.output.width
+        return self.output.dataport.width
 
     @property
     def shape(self):
-        return self.output.shape
+        return self.output.dataport.shape
 
     @property
     def N(self):
-        return self.output.shape[0]
+        return self.output.dataport.shape[0]
 
     def elaborate(self, platform):
         m = Module()
@@ -78,9 +78,9 @@ class RowFifos(Elaboratable):
 
         for n in range(self.N):
             if self.invert:
-                comb += self.output.matrix[n].eq(fifo[n].r_data)
+                comb += self.output.dataport.matrix[n].eq(fifo[n].r_data)
             else:
-                comb += self.output.matrix[n].eq(fifo[self.N-1-n].r_data)
+                comb += self.output.dataport.matrix[n].eq(fifo[self.N-1-n].r_data)
 
         return m
 

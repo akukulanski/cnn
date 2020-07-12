@@ -93,19 +93,19 @@ class Farm(Elaboratable):
 
         for i, core in enumerate(self.cores):
             m.submodules['core_' + str(i)] = core
-            comb += core.input_b.connect_data_ports(self.input_b) # same coefficients for everybody
+            comb += core.input_b.dataport.eq(self.input_b.dataport) # same coefficients for everybody
             with m.If(current_core_sink == i):
                 comb += [self.input_a.ready.eq(core.input_a.ready),
                          self.input_b.ready.eq(core.input_b.ready),
                         ]
                 comb += [core.input_a.valid.eq(self.input_a.valid),
                          core.input_b.valid.eq(self.input_b.valid),
-                         core.input_a.connect_data_ports(self.input_a),
+                         core.input_a.dataport.eq(self.input_a.dataport),
                         ]
             with m.Else():
                 comb += [core.input_a.valid.eq(0),
                          core.input_b.valid.eq(0),
-                         core.input_a.connect_to_const(0),
+                         core.input_a.dataport.eq_const(0),
                         ]
             with m.If(current_core_source == i):
                 comb += [self.output.valid.eq(core.output.valid),

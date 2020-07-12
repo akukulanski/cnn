@@ -2,15 +2,6 @@ from nmigen import *
 from nmigen.lib.fifo import SyncFIFOBuffered
 
 
-def connect_flat2array(flat, array):
-    assert sum([len(x) for x in array]) == len(flat), f'sum({[len(x) for x in array]}) != {len(flat)}'
-    connections = []
-    offset = 0
-    for f in array:
-        connections.append(f.eq(flat[offset:offset+len(f)]))
-        offset += len(f)
-    return connections
-
 class StreamWrapper(Elaboratable):
 
 
@@ -50,15 +41,15 @@ class StreamWrapper(Elaboratable):
 
     def get_wrapped_input_ports(self):
         try:
-            return [getattr(self.wrapped_core, self.input_map[f[0]]) for f in self.input.DATA_FIELDS]
+            return [getattr(self.wrapped_core, self.input_map[f]) for f in self.input.dataport.fields]
         except KeyError:
-            return [getattr(self.wrapped_core, f[0]) for f in self.input.DATA_FIELDS]
+            return [getattr(self.wrapped_core, f) for f in self.input.dataport.fields]
     
     def get_wrapped_output_ports(self):
         try:
-            return [getattr(self.wrapped_core, self.output_map[f[0]]) for f in self.output.DATA_FIELDS]
+            return [getattr(self.wrapped_core, self.output_map[f]) for f in self.output.dataport.fields]
         except KeyError:
-            return [getattr(self.wrapped_core, f[0]) for f in self.output.DATA_FIELDS]
+            return [getattr(self.wrapped_core, f) for f in self.output.dataport.fields]
 
 
     def elaborate(self, platform):
@@ -86,10 +77,10 @@ class StreamWrapper(Elaboratable):
             for prv, nxt in zip(last_shift_reg[:-1], last_shift_reg[1:]):
                 sync += nxt.eq(prv)
 
-        for core_field, stream_field in zip(self.get_wrapped_output_ports(), self.output.data_ports()):
+        for core_field, stream_field in zip(self.get_wrapped_output_ports(), self.output.data_ports):
             comb += stream_field.eq(core_field)
 
-        for core_field, stream_field in zip(self.get_wrapped_input_ports(), self.input.data_ports()):
+        for core_field, stream_field in zip(self.get_wrapped_input_ports(), self.input.data_ports):
             comb += core_field.eq(stream_field)
 
         return m

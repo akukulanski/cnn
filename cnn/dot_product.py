@@ -28,15 +28,15 @@ class DotProduct(Elaboratable):
     
     @property
     def input_w(self):
-        return self.input_a.width
+        return self.input_a.dataport.width
     
     @property
     def n_inputs(self):
-        return self.input_a.n_elements
+        return self.input_a.dataport.n_elements
 
     @property
     def shape(self):
-        return self.input_a.shape
+        return self.input_a.dataport.shape
 
     @property
     def output_w(self):

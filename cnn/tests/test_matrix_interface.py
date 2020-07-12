@@ -40,7 +40,7 @@ class MatrixInterfaceBypass(Elaboratable):
                  self.input.ready.eq(self.output.ready),
                 ]
 
-        comb += self.output.connect_data_ports(self.input)
+        comb += self.output.dataport.eq(self.input.dataport)
 
         #######################################################################
         #

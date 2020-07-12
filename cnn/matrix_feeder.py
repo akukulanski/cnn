@@ -29,11 +29,11 @@ class MatrixFeeder(Elaboratable):
 
     @property
     def shape(self):
-        return self.output.shape
+        return self.output.dataport.shape
 
     @property
     def N(self):
-        return self.output.shape[0]
+        return self.output.dataport.shape[0]
     
 
     def elaborate(self, platform):
@@ -57,11 +57,11 @@ class MatrixFeeder(Elaboratable):
                 ]
 
         comb += [submatrix.input.valid.eq(row_fifos.output.valid),
-                 submatrix.input.connect_data_ports(row_fifos.output),
+                 submatrix.input.dataport.eq(row_fifos.output.dataport),
                  row_fifos.output.ready.eq(submatrix.input.ready),
                 ]
 
-        comb += [self.output.connect_data_ports(submatrix.output),
+        comb += [self.output.dataport.eq(submatrix.output.dataport),
                 ]
 
         with m.If(submatrix.output.accepted()):
@@ -95,19 +95,19 @@ class SubmatrixRegisters(Elaboratable):
 
     @property
     def data_w(self):
-        return self.input.width
+        return self.input.dataport.width
 
     @property
     def shape_i(self):
-        return self.input.shape
+        return self.input.dataport.shape
 
     @property
     def shape_o(self):
-        return self.output.shape
+        return self.output.dataport.shape
 
     @property
     def N(self):
-        return self.output.shape[0]
+        return self.output.dataport.shape[0]
 
     def elaborate(self, platform):
         m = Module()
@@ -121,9 +121,9 @@ class SubmatrixRegisters(Elaboratable):
 
         with m.If(self.input.accepted()):
             for row in range(self.N): # row iteration
-                sync += self.output.matrix[row, _col(0)].eq(self.input.matrix[row]) # append column from input
+                sync += self.output.dataport.matrix[row, _col(0)].eq(self.input.dataport.matrix[row]) # append column from input
                 for col in range(1, self.N): # shift to the right the other columns
-                    sync += self.output.matrix[row, _col(col)].eq(self.output.matrix[row, _col(col-1)])
+                    sync += self.output.dataport.matrix[row, _col(col)].eq(self.output.dataport.matrix[row, _col(col-1)])
 
         with m.If(self.input.accepted()):
             sync += self.output.valid.eq(1)

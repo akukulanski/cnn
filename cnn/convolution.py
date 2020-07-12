@@ -87,14 +87,14 @@ class Convolution(Elaboratable):
         # matrix feeder --> farm
         comb += [farm.input_a.valid.eq(matrix_feeder.output.valid),
                  farm.input_a.last.eq(matrix_feeder.output.last),
-                 farm.input_a.connect_data_ports(matrix_feeder.output),
+                 farm.input_a.dataport.eq(matrix_feeder.output.dataport),
                  matrix_feeder.output.ready.eq(farm.input_a.ready)
                 ]
         
         # coeffs --> farm
         comb += [farm.input_b.valid.eq(self.coeff.valid),
                  farm.input_b.last.eq(self.coeff.last),
-                 farm.input_b.connect_data_ports(self.coeff),
+                 farm.input_b.dataport.eq(self.coeff.dataport),
                  self.coeff.ready.eq(farm.input_b.ready),
                 ]
 

@@ -46,7 +46,7 @@ class MatrixFeederSkip(MatrixFeeder):
             self.input.ready.eq(matrix_feeder.input.ready),
         ]
 
-        comb += self.output.connect_data_ports(matrix_feeder.output)
+        comb += self.output.dataport.eq(matrix_feeder.output.dataport)
         comb += self.output.last.eq(is_last(row, col, self.output_shape))
 
         with m.If(matrix_feeder.output.accepted()):
@@ -132,7 +132,7 @@ class Pooling(Elaboratable):
         tree_n_stages = int(ceil(log2(n_inputs)))
 
         m.submodules.matrix_feeder = matrix_feeder = self.matrix_feeder
-        m.submodules.pooler = pooler = pooling_core(width_i=self.input.width,
+        m.submodules.pooler = pooler = pooling_core(width_i=self.input.dataport.width,
                                                     n_stages=tree_n_stages,
                                                     reg_in=False,
                                                     reg_out=False)
@@ -155,11 +155,11 @@ class Pooling(Elaboratable):
         ]
 
         # valid inputs
-        for i, matrix_output in enumerate(matrix_feeder.output.data_ports()):
-            comb += pooler.input.matrix[i].eq(matrix_output)
+        for i, matrix_output in enumerate(matrix_feeder.output.data_ports):
+            comb += pooler.input.dataport.matrix[i].eq(matrix_output)
         # zero inputs
         for i in range(n_inputs, tree_n_inputs):
-            comb += pooler.input.matrix[i].eq(0)
+            comb += pooler.input.dataport.matrix[i].eq(0)
 
         # pooler --> output
         comb += [

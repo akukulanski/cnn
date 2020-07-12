@@ -82,7 +82,7 @@ class StreamMacc(Elaboratable):
         accepted_last = self.input.accepted() & self.input.last
         last_delayed = signal_delay(m, accepted_last, self.latency, ce=clken)
         
-        accum_shifted = Signal(signed(self.output.width))
+        accum_shifted = Signal(signed(self.output.dataport.width))
 
         with m.FSM() as fsm:
 
